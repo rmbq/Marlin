@@ -776,6 +776,10 @@ inline void manage_inactivity(const bool no_stepper_sleep=false) {
  *  - Handle Joystick jogging
  */
 void idle(bool no_stepper_sleep/*=false*/) {
+  #ifdef MAX7219_DEBUG_PROFILE
+    CodeProfiler idle_profiler;
+  #endif
+
   #if ENABLED(MARLIN_DEV_MODE)
     static uint16_t idle_depth = 0;
     if (++idle_depth > 5) SERIAL_ECHOLNPGM("idle() call depth: ", idle_depth);
@@ -785,7 +789,7 @@ void idle(bool no_stepper_sleep/*=false*/) {
   manage_inactivity(no_stepper_sleep);
 
   // Manage Heaters (and Watchdog)
-  thermalManager.manage_heater();
+  thermalManager.task();
 
   // Max7219 heartbeat, animation, etc
   TERN_(MAX7219_DEBUG, max7219.idle_tasks());
