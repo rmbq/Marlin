@@ -643,9 +643,9 @@
     #define DEFAULT_Ki_LIST {   1.08,   1.08 }
     #define DEFAULT_Kd_LIST { 114.00, 114.00 }
   #else
-    #define DEFAULT_Kp  14.32
-    #define DEFAULT_Ki   0.81
-    #define DEFAULT_Kd  63.12
+    #define DEFAULT_Kp  23.63
+    #define DEFAULT_Ki   1.96
+    #define DEFAULT_Kd  71.31
   #endif
 #endif
 
