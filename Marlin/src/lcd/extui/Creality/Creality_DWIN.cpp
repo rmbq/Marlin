@@ -417,15 +417,8 @@ void onIdle()
   rtscheck.RTS_SndData(((unsigned int)getAxisMaxFeedrate_mm_s(Y)), Feed_Y);
   rtscheck.RTS_SndData(((unsigned int)getAxisMaxFeedrate_mm_s(Z)), Feed_Z);
   rtscheck.RTS_SndData(((unsigned int)getAxisMaxFeedrate_mm_s(E0)), Feed_E);
-
-#if HAS_JUNCTION_DEVIATION
-  rtscheck.RTS_SndData(((unsigned int)getJunctionDeviation_mm()*100), Jerk_X);
-#else
-  rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(X)*100), Jerk_X);
-  rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(Y)*100), Jerk_Y);
-  rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(Z)*100), Jerk_Z);
-  rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(E0)*100), Jerk_E);
-#endif
+  
+  rtscheck.RTS_SndData(getJunctionDeviation_mm() * 1000, JuncDev);
 
   #if HAS_BED_PROBE
     rtscheck.RTS_SndData(getProbeOffset_mm(X) * 100, ProbeOffset_X);
@@ -835,10 +828,7 @@ void RTSSHOW::RTS_HandleData()
     case Feed_Y:
     case Feed_Z:
     case Feed_E:
-    case Jerk_X:
-    case Jerk_Y:
-    case Jerk_Z:
-    case Jerk_E:
+    case JuncDev:
     case RunoutToggle:
     case PowerLossToggle:
     case LedToggle:
@@ -1178,22 +1168,33 @@ void RTSSHOW::RTS_HandleData()
         setAxisMaxAcceleration_mm_s2((uint16_t)recdat.data[0], E0);
         setAxisMaxAcceleration_mm_s2((uint16_t)recdat.data[0], E1);
       }
-
       else if (recdat.addr == Feed_X) {
-          setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], X);
+        setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], X);
+      }
+      else if (recdat.addr == Feed_Y) {
+        setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], Y);
+      }
+      else if (recdat.addr == Feed_Z) {
+        setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], Z);
+      }
+      else if (recdat.addr == Feed_E) {
+        setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], E0);
+        setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], E1);
+      }
+      #if HAS_JUNCTION_DEVIATION
+      else if (recdat.addr == JuncDev) {
+        float tmp_float_handling;
+        if (recdat.data[0] >= 32768)
+        {
+          tmp_float_handling = ((float)recdat.data[0] - 65536) / 1000;
         }
-        else if (recdat.addr == Feed_Y) {
-          setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], Y);
+        else
+        {
+          tmp_float_handling = ((float)recdat.data[0]) / 1000;
         }
-        else if (recdat.addr == Feed_Z) {
-          setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], Z);
-        }
-        else if (recdat.addr == Feed_E) {
-          setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], E0);
-          setAxisMaxFeedrate_mm_s((uint16_t)recdat.data[0], E1);
-        }
-
-
+        setJunctionDeviation_mm(tmp_float_handling);
+      }
+      #endif
       else {
         float tmp_float_handling;
         if (recdat.data[0] >= 32768)
