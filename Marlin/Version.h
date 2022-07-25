@@ -28,7 +28,7 @@
 /**
  * Marlin release version identifier
  */
-#define SHORT_BUILD_VERSION "rmbq CR10Sm"
+#define SHORT_BUILD_VERSION "rmbq 1.0.0"
 
 /**
  * Verbose version identifier which should contain a reference to the location
