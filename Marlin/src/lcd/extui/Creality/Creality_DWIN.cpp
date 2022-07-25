@@ -418,11 +418,14 @@ void onIdle()
   rtscheck.RTS_SndData(((unsigned int)getAxisMaxFeedrate_mm_s(Z)), Feed_Z);
   rtscheck.RTS_SndData(((unsigned int)getAxisMaxFeedrate_mm_s(E0)), Feed_E);
 
+#if HAS_JUNCTION_DEVIATION
+  rtscheck.RTS_SndData(((unsigned int)getJunctionDeviation_mm()*100), Jerk_X);
+#else
   rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(X)*100), Jerk_X);
   rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(Y)*100), Jerk_Y);
   rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(Z)*100), Jerk_Z);
   rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(E0)*100), Jerk_E);
-
+#endif
 
   #if HAS_BED_PROBE
     rtscheck.RTS_SndData(getProbeOffset_mm(X) * 100, ProbeOffset_X);
