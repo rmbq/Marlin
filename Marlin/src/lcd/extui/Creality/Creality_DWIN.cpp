@@ -163,8 +163,7 @@ void onStartup()
 
 void onIdle()
 {
-
-   while (rtscheck.RTS_RecData() > 0 && (rtscheck.recdat.data[0]!=0 || rtscheck.recdat.addr!=0))
+   while (rtscheck.RTS_RecData() > 0 && (rtscheck.recdat.data[0] != 0 || rtscheck.recdat.addr != 0))
 		rtscheck.RTS_HandleData();
 
   if (reEntryPrevent && reEntryCount < 120) {
@@ -322,31 +321,27 @@ void onIdle()
   #endif
 
 
-  if (startprogress == 0)
+  if (startprogress < 200)
   {
-    startprogress += 25;
-          delay_ms(300); // Delay to show bootscreen
-  }
-  else if( startprogress < 250)
-  {
-    if(isMediaInserted()) //Re init media as it happens too early on STM32 boards often
-      onMediaInserted();
+    startprogress += BOOTSCREEN_TIMEOUT / 200;
+    delay_ms(BOOTSCREEN_TIMEOUT / (BOOTSCREEN_TIMEOUT / 200)); // Delay to show bootscreen
+    if(startprogress >= 200)
+    {
+      if(isMediaInserted()) //Re init media as it happens too early on STM32 boards often
+        onMediaInserted();
+      else
+        injectCommands_P(PSTR("M22\nM21"));
+      SERIAL_ECHOLNPGM_P(PSTR("  startprogress "));
+      InforShowStatus = true;
+      TPShowStatus = false;
+      rtscheck.RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
+      reEntryPrevent = false;
+    }
+    if (startprogress <= 100)
+      rtscheck.RTS_SndData(startprogress, StartIcon);
     else
-      injectCommands_P(PSTR("M22\nM21"));
-    startprogress = 254;
-    SERIAL_ECHOLNPGM_P(PSTR("  startprogress "));
-    InforShowStatus = true;
-    TPShowStatus = false;
-    rtscheck.RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
-    reEntryPrevent = false;
-		return;
+      rtscheck.RTS_SndData(startprogress - 100, StartIcon + 1);
   }
-  if (startprogress <= 100)
-    rtscheck.RTS_SndData(startprogress, StartIcon);
-  else
-    rtscheck.RTS_SndData((startprogress - 100), StartIcon + 1);
-
-  //rtscheck.RTS_SndData((startprogress++) % 5, ExchFlmntIcon);
 
   if (isPrinting())
 	{
