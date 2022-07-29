@@ -57,8 +57,8 @@ namespace ExtUI
 #define RegAddr_R 0x81
 #define VarAddr_W 0x82
 #define VarAddr_R 0x83
-#define ExchangePageBase (unsigned long)0x5A010000 // the first page ID. other page = first page ID + relevant num;
-#define StartSoundSet ((unsigned long)0x060480A0)  // 06,start-music; 04, 4 musics; 80, the volume value; 04, return value about music number.
+#define ExchangePageBase ((unsigned long)0x5A010000) // the first page ID. other page = first page ID + relevant num;
+#define StartSoundSet ((unsigned long)0x060480A0)    // 06,start-music; 04, 4 musics; 80, the volume value; 04, return value about music number.
 #define FONT_EEPROM 90
 #define AutoLeve_EEPROM 100
 #define FanOn 255
@@ -170,6 +170,42 @@ namespace ExtUI
 #else
 #define DWIN_SERIAL LCD_SERIAL
 #endif
+
+  typedef enum : unsigned long
+  {
+    DWIN_PAGE_START = 0,
+    DWIN_PAGE_TOOLS = 34,
+    DWIN_PAGE_MAIN = 45,
+    DWIN_PAGE_CHOOSE_FILE = 46,
+    DWIN_PAGE_PRINT_END = 51,
+    DWIN_PAGE_PRINTING = 53,
+    DWIN_PAGE_PRINT_PAUSE = 54,
+    DWIN_PAGE_PRINT_ADJ = 56,
+    DWIN_PAGE_TEMP_FON = 57,
+    DWIN_PAGE_TEMP_FOFF = 58,
+    DWIN_PAGE_PLA_ABS_FON = 59,
+    DWIN_PAGE_PLA_ABS_FOFF = 60,
+    DWIN_PAGE_TEMP_MANUAL = 61,
+    DWIN_PAGE_SETTINGS = 63,
+    DWIN_PAGE_BED_LVL = 64,
+    DWIN_PAGE_CHANGE_FIL_L_TEMP = 66,
+    DWIN_PAGE_CHANGE_FIL_H = 68,
+    DWIN_PAGE_MOVE_FILAMENT = 65,
+    DWIN_PAGE_MOVE_10 = 71,
+    DWIN_PAGE_MOVE_1 = 72,
+    DWIN_PAGE_MOVE_01 = 73,
+    DWIN_PAGE_CONTINUE_PRNT = 76,
+    DWIN_PAGE_CHANGE_FIL = 78,
+    DWIN_PAGE_MANUAL_CHNG_FIL_N = 82,
+    DWIN_PAGE_MANUAL_CHNG_FIL = 83,
+    DWIN_PAGE_AUX_LVL = 84,
+    DWIN_PAGE_FAULT = 88,
+    DWIN_PAGE_STEP_LVL = 91,
+    DWIN_PAGE_PID_LVL = 92,
+    DWIN_PAGE_MANUAL_MESH = 93,
+    DWIN_PAGE_SCREEN_CFG = 94,
+    DWIN_PAGE_SPEED_CFG = 95
+  } dwin_pages_e;
 
   /************struct**************/
 

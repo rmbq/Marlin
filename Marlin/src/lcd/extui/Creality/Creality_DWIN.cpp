@@ -236,7 +236,7 @@ namespace ExtUI
     }
     else if (pause_resume_selected && !awaitingUserConfirm())
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINTING, ExchangepageAddr);
       pause_resume_selected = false;
       userConfValidation = 0;
     }
@@ -271,7 +271,7 @@ namespace ExtUI
         InforShowStatus = true;
         SERIAL_ECHOLNPGM_P(PSTR("==waitway 1=="));
         rtscheck.RTS_SndData(4 + CEIconGrap, IconPrintstatus); // 4 for Pause
-        rtscheck.RTS_SndData(ExchangePageBase + 54, ExchangepageAddr);
+        rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINT_PAUSE, ExchangepageAddr);
         waitway = 0;
       }
       break;
@@ -284,7 +284,7 @@ namespace ExtUI
     case 3:
       SERIAL_ECHOLNPGM_P(PSTR("==waitway 3=="));
       // if(isPositionKnown() && (getActualTemp_celsius(BED) >= (getTargetTemp_celsius(BED)-1))) {
-      rtscheck.RTS_SndData(ExchangePageBase + 64, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
       waitway = 7;
       // return;
       //}
@@ -294,7 +294,7 @@ namespace ExtUI
       if (AutohomeKey && isPositionKnown() && !commandsInQueue())
       { // Manual Move Home Done
         SERIAL_ECHOLNPGM_P(PSTR("==waitway 4=="));
-        // rtscheck.RTS_SndData(ExchangePageBase + 71 + AxisPagenum, ExchangepageAddr);
+        // rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_MOVE_10 + AxisPagenum, ExchangepageAddr);
         AutohomeKey = false;
         waitway = 0;
       }
@@ -305,7 +305,7 @@ namespace ExtUI
         InforShowStatus = true;
         waitway = 0;
         SERIAL_ECHOLNPGM_P(PSTR("==waitway 5=="));
-        rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr); // exchange to 78 page
+        rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr); // exchange to DWIN_PAGE_CHANGE_FIL page
       }
       break;
     case 6:
@@ -364,7 +364,7 @@ namespace ExtUI
         SERIAL_ECHOLNPGM_P(PSTR("  startprogress "));
         InforShowStatus = true;
         TPShowStatus = false;
-        rtscheck.RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
+        rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_MAIN, ExchangepageAddr);
         reEntryPrevent = false;
       }
       if (startprogress <= 100)
@@ -477,7 +477,7 @@ namespace ExtUI
         rtscheck.RTS_SndData(10 * ChangeMaterialbuf[0], FilementUnit1);
         rtscheck.RTS_SndData(10 * ChangeMaterialbuf[1], FilementUnit2);
         SERIAL_ECHOLNPGM_P(PSTR("==Heating Done Change Filament=="));
-        rtscheck.RTS_SndData(ExchangePageBase + 65, ExchangepageAddr);
+        rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_MOVE_FILAMENT, ExchangepageAddr);
       }
       else if (getActualTemp_celsius(H0) >= getTargetTemp_celsius(H0) && NozzleTempStatus[2])
       {
@@ -485,7 +485,7 @@ namespace ExtUI
         NozzleTempStatus[2] = 0;
         TPShowStatus = true;
         rtscheck.RTS_SndData(4, ExchFlmntIcon);
-        rtscheck.RTS_SndData(ExchangePageBase + 83, ExchangepageAddr);
+        rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_MANUAL_CHNG_FIL, ExchangepageAddr);
       }
       else if (NozzleTempStatus[2])
       {
@@ -909,7 +909,7 @@ namespace ExtUI
         fileIndex = 0;
         recordcount = 0;
         SERIAL_ECHOLNPGM_P(PSTR("Handle Data PrintFile Post"));
-        RTS_SndData(ExchangePageBase + 46, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_CHOOSE_FILE, ExchangepageAddr);
       }
       else if (recdat.data[0] == 2) // return after printing result.
       {
@@ -926,7 +926,7 @@ namespace ExtUI
         RTS_SndData(0, Timemin);
 
         SERIAL_ECHOLNPGM_P(PSTR("Handle Data PrintFile 2 Setting Screen "));
-        RTS_SndData(ExchangePageBase + 45, ExchangepageAddr); // exchange to 45 page
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_MAIN, ExchangepageAddr); // exchange to DWIN_PAGE_MAIN page
       }
       else if (recdat.data[0] == 3) // Temperature control
       {
@@ -934,9 +934,9 @@ namespace ExtUI
         TPShowStatus = false;
         SERIAL_ECHOLNPGM_P(PSTR("Handle Data PrintFile 3 Setting Screen "));
         if (FanStatus)
-          RTS_SndData(ExchangePageBase + 58, ExchangepageAddr); // exchange to 58 page, the fans off
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_TEMP_FOFF, ExchangepageAddr); // exchange to DWIN_PAGE_TEMP_FOFF page, the fans off
         else
-          RTS_SndData(ExchangePageBase + 57, ExchangepageAddr); // exchange to 57 page, the fans on
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_TEMP_FON, ExchangepageAddr); // exchange to DWIN_PAGE_TEMP_FON page, the fans on
       }
       else if (recdat.data[0] == 4) // Settings
         InforShowStatus = false;
@@ -954,15 +954,15 @@ namespace ExtUI
         InforShowStatus = true;
         if (PrinterStatusKey[1] == 3) // during heating
         {
-          RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINTING, ExchangepageAddr);
         }
         else if (PrinterStatusKey[1] == 4)
         {
-          RTS_SndData(ExchangePageBase + 54, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINT_PAUSE, ExchangepageAddr);
         }
         else
         {
-          RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINTING, ExchangepageAddr);
         }
       }
       else if (recdat.data[0] == 3)
@@ -1005,12 +1005,12 @@ namespace ExtUI
         SERIAL_ECHOLNPGM_P(PSTR("StopPrint"));
         if (recdat.data[0] == 240) // no
         {
-          RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINTING, ExchangepageAddr);
           SERIAL_ECHOLNPGM("Stop No", recdat.data[0]);
         }
         else
         {
-          RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_MAIN, ExchangepageAddr);
           RTS_SndData(0, Timehour);
           RTS_SndData(0, Timemin);
           SERIAL_ECHOLNPGM("Stop Triggered", recdat.data[0]);
@@ -1022,7 +1022,7 @@ namespace ExtUI
         if (recdat.data[0] != 0xF1)
           break;
 
-        RTS_SndData(ExchangePageBase + 54, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINT_PAUSE, ExchangepageAddr);
         pausePrint();
       }
       else if (recdat.addr == Resumeprint && recdat.data[0] == 1)
@@ -1034,7 +1034,7 @@ namespace ExtUI
 
         RTS_SndData(0 + CEIconGrap, IconPrintstatus);
         // PrinterStatusKey[1] = 3;
-        RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINTING, ExchangepageAddr);
       }
       if (recdat.addr == Resumeprint && recdat.data[0] == 2) // warming
       {
@@ -1042,7 +1042,7 @@ namespace ExtUI
         NozzleTempStatus[2] = 1;
         PrinterStatusKey[1] = 0;
         InforShowStatus = true;
-        RTS_SndData(ExchangePageBase + 82, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_MANUAL_CHNG_FIL_N, ExchangepageAddr);
       }
       break;
 
@@ -1091,9 +1091,9 @@ namespace ExtUI
       else if (recdat.data[0] == 1)
       {
         if (FanStatus)
-          RTS_SndData(ExchangePageBase + 60, ExchangepageAddr); // exchange to 60 page, the fans off
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_PLA_ABS_FOFF, ExchangepageAddr); // exchange to DWIN_PAGE_PLA_ABS_FOFF page, the fans off
         else
-          RTS_SndData(ExchangePageBase + 59, ExchangepageAddr); // exchange to 59 page, the fans on
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_PLA_ABS_FON, ExchangepageAddr); // exchange to DWIN_PAGE_PLA_ABS_FON page, the fans on
       }
       else if (recdat.data[0] == 2)
       {
@@ -1105,13 +1105,13 @@ namespace ExtUI
         {
           setTargetFan_percent(100, FAN0);
           FanStatus = false;
-          RTS_SndData(ExchangePageBase + 57, ExchangepageAddr); // exchange to 57 page, the fans on
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_TEMP_FON, ExchangepageAddr); // exchange to DWIN_PAGE_TEMP_FON page, the fans on
         }
         else // turn off the fan
         {
           setTargetFan_percent(0, FAN0);
           FanStatus = true;
-          RTS_SndData(ExchangePageBase + 58, ExchangepageAddr); // exchange to 58 page, the fans on
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_TEMP_FOFF, ExchangepageAddr); // exchange to DWIN_PAGE_TEMP_FOFF page, the fans on
         }
       }
       else if (recdat.data[0] == 5) // PLA mode
@@ -1147,7 +1147,7 @@ namespace ExtUI
         delay_ms(1);
 
         RTS_SndData(8 + CEIconGrap, IconPrintstatus);
-        RTS_SndData(ExchangePageBase + 57, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_TEMP_FON, ExchangepageAddr);
         PrinterStatusKey[1] = 2;
       }
       break;
@@ -1159,9 +1159,9 @@ namespace ExtUI
         if (recdat.data[0] == 0)
         {
           if (FanStatus)
-            RTS_SndData(ExchangePageBase + 58, ExchangepageAddr); // exchange to 58 page, the fans off
+            RTS_SndData(ExchangePageBase + DWIN_PAGE_TEMP_FOFF, ExchangepageAddr); // exchange to DWIN_PAGE_TEMP_FOFF page, the fans off
           else
-            RTS_SndData(ExchangePageBase + 57, ExchangepageAddr); // exchange to 57 page, the fans on
+            RTS_SndData(ExchangePageBase + DWIN_PAGE_TEMP_FON, ExchangepageAddr); // exchange to DWIN_PAGE_TEMP_FON page, the fans on
         }
         else if (recdat.data[0] == 1)
         {
@@ -1399,7 +1399,7 @@ namespace ExtUI
           injectCommands_P(PSTR("G1F1000Z0.0"));
         waitway = 2;
 
-        RTS_SndData(ExchangePageBase + 64, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
       }
       else if (recdat.data[0] == 2) // Exchange filement
       {
@@ -1412,12 +1412,12 @@ namespace ExtUI
         RTS_SndData(getActualTemp_celsius(H0), NozzleTemp);
         RTS_SndData(getTargetTemp_celsius(H0), NozzlePreheat);
         delay_ms(2);
-        RTS_SndData(ExchangePageBase + 65, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_MOVE_FILAMENT, ExchangepageAddr);
       }
       else if (recdat.data[0] == 3) // Move
       {
         AxisPagenum = 0;
-        RTS_SndData(ExchangePageBase + 71, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_MOVE_10, ExchangepageAddr);
       }
       else if (recdat.data[0] == 4) // Language
       {
@@ -1439,11 +1439,11 @@ namespace ExtUI
       if (recdat.data[0] == 1) // return to the tool page
       {
         InforShowStatus = false;
-        RTS_SndData(ExchangePageBase + 63, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_SETTINGS, ExchangepageAddr);
       }
       if (recdat.data[0] == 2) // return to the Level mode page
       {
-        RTS_SndData(ExchangePageBase + 64, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
       }
       break;
 
@@ -1501,13 +1501,13 @@ namespace ExtUI
         else
           injectCommands_P((PSTR("G1 F1000 Z0.0")));
         waitway = 2;
-        RTS_SndData(ExchangePageBase + 84, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_AUX_LVL, ExchangepageAddr);
         break;
       }
       case 5: // AutoLevel "Measuring" Button
       {
 #if ENABLED(MESH_BED_LEVELING)
-        RTS_SndData(ExchangePageBase + 93, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_MANUAL_MESH, ExchangepageAddr);
 #else
         waitway = 3; // only for prohibiting to receive massage
         RTS_SndData(3, AutolevelIcon);
@@ -1517,7 +1517,7 @@ namespace ExtUI
           rtscheck.RTS_SndData(0, AutolevelVal + abl_probe_index * 2);
           ++abl_probe_index;
         }
-        RTS_SndData(ExchangePageBase + 64, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
         injectCommands_P(PSTR(MEASURING_GCODE));
 #endif
         break;
@@ -1734,7 +1734,7 @@ namespace ExtUI
         {
           RTS_SndData((int)EXTRUDE_MINTEMP, 0x1020);
           delay_ms(5);
-          RTS_SndData(ExchangePageBase + 66, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL_L_TEMP, ExchangepageAddr);
           break;
         }
 
@@ -1774,12 +1774,12 @@ namespace ExtUI
           RTS_SndData(getActualTemp_celsius(H0), NozzleTemp);
           RTS_SndData(getTargetTemp_celsius(H0), NozzlePreheat);
           delay_ms(5);
-          RTS_SndData(ExchangePageBase + 68, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL_H, ExchangepageAddr);
           break;
         }
         case 6: // cancel to heat
         {
-          RTS_SndData(ExchangePageBase + 65, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_MOVE_FILAMENT, ExchangepageAddr);
           break;
         }
         case 0xF1: // Sure to cancel heating
@@ -1787,7 +1787,7 @@ namespace ExtUI
           // InforShowoStatus = true;
           NozzleTempStatus[0] = 0;
           delay_ms(1);
-          RTS_SndData(ExchangePageBase + 65, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_MOVE_FILAMENT, ExchangepageAddr);
           break;
         }
         case 0xF0: // not to cancel heating
@@ -1827,7 +1827,7 @@ namespace ExtUI
       }
       case 1:
       {
-        RTS_SndData(ExchangePageBase + 94, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_SCREEN_CFG, ExchangepageAddr);
         break;
       }
 #if ENABLED(PIDTEMP)
@@ -2009,7 +2009,7 @@ namespace ExtUI
 
           RTS_SndData(1 + CEIconGrap, IconPrintstatus); // 1 for Heating
           delay_ms(2);
-          RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
+          RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINTING, ExchangepageAddr);
 
           TPShowStatus = InforShowStatus = true;
           PrinterStatusKey[0] = 1;
@@ -2262,7 +2262,7 @@ namespace ExtUI
   void onPrinterKilled(FSTR_P const error, FSTR_P const component)
   {
     SERIAL_ECHOLNPGM_P(PSTR("***kill***"));
-    rtscheck.RTS_SndData(ExchangePageBase + 88, ExchangepageAddr);
+    rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_FAULT, ExchangepageAddr);
     int j = 0;
     char outmsg[40];
     char killMsg[strlen_P(FTOP(error)) + strlen_P(FTOP(component)) + 3];
@@ -2362,13 +2362,13 @@ namespace ExtUI
     InforShowStatus = true;
     rtscheck.RTS_SndData(4 + CEIconGrap, IconPrintstatus);
     delay_ms(1);
-    rtscheck.RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
+    rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINTING, ExchangepageAddr);
   }
 
   void onPrintTimerPaused()
   {
     SERIAL_ECHOLNPGM_P(PSTR("==onPrintTimerPaused=="));
-    rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr); // Display Pause Screen
+    rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr); // Display Pause Screen
     onStatusChanged("Pausing...");
   }
   void onPrintTimerStopped()
@@ -2386,7 +2386,7 @@ namespace ExtUI
     PrinterStatusKey[0] = 0;
     InforShowStatus = true;
     TPShowStatus = false;
-    rtscheck.RTS_SndData(ExchangePageBase + 51, ExchangepageAddr);
+    rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_PRINT_END, ExchangepageAddr);
   }
 
   void onFilamentRunout()
@@ -2394,14 +2394,14 @@ namespace ExtUI
     SERIAL_ECHOLNPGM_P(PSTR("==onFilamentRunout=="));
     PrinterStatusKey[1] = 4;
     TPShowStatus = false;
-    rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+    rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
   }
   void onFilamentRunout(extruder_t extruder)
   {
     SERIAL_ECHOLNPGM_P(PSTR("==onFilamentRunout=="));
     PrinterStatusKey[1] = 4;
     TPShowStatus = false;
-    rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+    rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
   }
   void onUserConfirmRequired(const char *const msg)
   {
@@ -2414,26 +2414,26 @@ namespace ExtUI
     {
     case PAUSE_MESSAGE_WAITING:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       onStatusChanged("Press Yes to Continue");
       break;
     }
     case PAUSE_MESSAGE_INSERT:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       onStatusChanged("Load Filament to           Continue");
       break;
     }
     case PAUSE_MESSAGE_HEAT:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       onStatusChanged("Add Filament and Press    Yes to Reheat");
       break;
     }
 #if DISABLED(ADVANCED_PAUSE_CONTINUOUS_PURGE)
     case PAUSE_MESSAGE_PURGE:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       char newMsg[40] = "Yes to ";
       if (TERN1(FILAMENT_RUNOUT_SENSOR, (!ExtUI::getFilamentRunoutState() && getFilamentRunoutEnabled())))
         strcat(newMsg, "Continue");
@@ -2448,7 +2448,7 @@ namespace ExtUI
 
     case PAUSE_MESSAGE_OPTION:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       char newMsg[40] = "Yes to ";
       if (TERN1(FILAMENT_RUNOUT_SENSOR, (!ExtUI::getFilamentRunoutState() && getFilamentRunoutEnabled())))
         strcat(newMsg, "Continue");
@@ -2462,25 +2462,25 @@ namespace ExtUI
 
     case PAUSE_MESSAGE_PARKING:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       onStatusChanged("Parking...");
       break;
     }
     case PAUSE_MESSAGE_CHANGING:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       onStatusChanged("Beginning Filament Change");
       break;
     }
     case PAUSE_MESSAGE_UNLOAD:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       onStatusChanged("Unloading...");
       break;
     }
     case PAUSE_MESSAGE_LOAD:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       onStatusChanged("Reloading...");
       break;
     }
@@ -2488,7 +2488,7 @@ namespace ExtUI
 #if ENABLED(ADVANCED_PAUSE_CONTINUOUS_PURGE)
     case PAUSE_MESSAGE_PURGE:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL, ExchangepageAddr);
       onStatusChanged("Press Yes to Stop Purge");
       break;
     }
@@ -2496,7 +2496,7 @@ namespace ExtUI
 
     case PAUSE_MESSAGE_HEATING:
     {
-      rtscheck.RTS_SndData(ExchangePageBase + 68, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CHANGE_FIL_H, ExchangepageAddr);
       onStatusChanged("Reheating");
       break;
     }
@@ -2545,7 +2545,7 @@ namespace ExtUI
   {
     if (waitway == 3)
       if (isPositionKnown() && (getActualTemp_celsius(BED) >= (getTargetTemp_celsius(BED) - 1)))
-        rtscheck.RTS_SndData(ExchangePageBase + 64, ExchangepageAddr);
+        rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
 #if HAS_MESH
     uint8_t abl_probe_index = 0;
     for (uint8_t outer = 0; outer < GRID_MAX_POINTS_Y; outer++)
@@ -2669,7 +2669,7 @@ namespace ExtUI
     InforShowStatus = true;
     TPShowStatus = false;
     reEntryPrevent = false;
-    rtscheck.RTS_SndData(ExchangePageBase + 76, ExchangepageAddr);
+    rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_CONTINUE_PRNT, ExchangepageAddr);
   }
 #endif
 
