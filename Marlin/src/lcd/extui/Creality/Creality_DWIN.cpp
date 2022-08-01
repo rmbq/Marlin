@@ -351,11 +351,11 @@ namespace ExtUI
       rtscheck.RTS_SndData(2, PowerLossToggle); /*Off*/
 #endif
 
-    if (startprogress < 200)
+    if (startprogress < 100)
     {
-      startprogress += BOOTSCREEN_TIMEOUT / 200;
-      delay_ms(BOOTSCREEN_TIMEOUT / (BOOTSCREEN_TIMEOUT / 200)); // Delay to show bootscreen
-      if (startprogress >= 200)
+      startprogress += BOOTSCREEN_TIMEOUT / 100;
+      delay_ms(BOOTSCREEN_TIMEOUT / (BOOTSCREEN_TIMEOUT / 100)); // Delay to show bootscreen
+      if (startprogress >= 100)
       {
         if (isMediaInserted()) // Re init media as it happens too early on STM32 boards often
           onMediaInserted();
