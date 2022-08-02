@@ -805,6 +805,24 @@ namespace ExtUI
     RTS_SndData();
   }
 
+  void changeFanPage()
+  {
+    if(FanStatus) {
+      currentPage = DWIN_PAGE_TEMP_FOFF;
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_TEMP_FOFF, ExchangepageAddr);
+    }
+    else {
+      currentPage = DWIN_PAGE_TEMP_FON;
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_TEMP_FON, ExchangepageAddr);
+    }
+  }
+
+  void storeSettings()
+  {
+    SERIAL_ECHOLNPGM_P(PSTR("Store Settings"));
+    injectCommands_P(PSTR("M500"));
+  }
+
   void RTSSHOW::RTS_HandleData()
   {
     int Checkkey = -1;
@@ -829,11 +847,8 @@ namespace ExtUI
     case DWIN_VP_MAIN:
       if (recdat.data[0] == 1)
         currentPage = DWIN_PAGE_FILE_SEL;
-      else if(recdat.data[0] == 3) {//TODO: cambiare pagina via codice
-        if(FanStatus)
-          currentPage = DWIN_PAGE_TEMP_FON;
-        else
-          currentPage = DWIN_PAGE_TEMP_FOFF;
+      else if(recdat.data[0] == 3) {
+        changeFanPage();
       }
       else if(recdat.data[0] == 4)
         currentPage = DWIN_PAGE_SETTINGS;
@@ -847,7 +862,10 @@ namespace ExtUI
         currentPage = DWIN_PAGE_MOVE_FILAMENT;
       else if (recdat.data[0] == 3)
         currentPage = DWIN_PAGE_MOVE_10;
-      else if (recdat.data[0] == 4);//TODO: disable motor
+      else if (recdat.data[0] == 4) {
+        SERIAL_ECHOLNPGM_P(PSTR("Disable all steppers"));
+        injectCommands_P(PSTR("M84"));
+      }
       else if (recdat.data[0] == 5)
         currentPage = DWIN_PAGE_TOOLS;
       else if (recdat.data[0] == 6)
@@ -856,32 +874,42 @@ namespace ExtUI
     case DWIN_VP_TOOLS:
       if (recdat.data[0] == 0)
         currentPage = DWIN_PAGE_SETTINGS;
-      else if (recdat.data[0] == 1);//TODO: reset bl touch
+      else if (recdat.data[0] == 1) {
+        SERIAL_ECHOLNPGM_P(PSTR("BLTouch Reset"));
+        injectCommands_P(PSTR("M999\nM280P0S160"));
+      }
       else if (recdat.data[0] == 2)
         currentPage = DWIN_PAGE_STEP_LVL;
       else if (recdat.data[0] == 3)
         currentPage = DWIN_PAGE_SCREEN_CFG;
-      else if (recdat.data[0] == 4);//TODO: initialize eeprom
+      else if (recdat.data[0] == 4) {
+        SERIAL_ECHOLNPGM_P(PSTR("Init EEPROM"));
+        injectCommands_P(PSTR("M502\nM500"));
+      }
       else if (recdat.data[0] == 5)
         currentPage = DWIN_PAGE_PID_LVL;
-      else if (recdat.data[0] == 6);//TODO: store settings
+      else if (recdat.data[0] == 6)
+        storeSettings();
       break;
     case DWIN_VP_STEP_LVL:
       if (recdat.data[0] == 0)
         currentPage = DWIN_PAGE_TOOLS;
       else if (recdat.data[0] == 1)
         currentPage = DWIN_PAGE_SPEED_CFG;
-      else if (recdat.data[0] == 2);//TODO: store settings
+      else if (recdat.data[0] == 2)
+        storeSettings();
       break;
     case DWIN_VP_SPEED_CFG:
       if (recdat.data[0] == 0)
         currentPage = DWIN_PAGE_STEP_LVL;
-      else if (recdat.data[0] == 1);//TODO: store settings
+      else if (recdat.data[0] == 1)
+        storeSettings();
       break;
     case DWIN_VP_DISPLAY_CFG:
       if (recdat.data[0] == 0)
         currentPage = DWIN_PAGE_TOOLS;
-      else if (recdat.data[0] == 1);//TODO: store settings
+      else if (recdat.data[0] == 1)
+        storeSettings();
       else if (recdat.data[0] == 11);//TODO: vol off
       else if (recdat.data[0] == 12);//TODO: vol full
       else if (recdat.data[0] == 13);//TODO: bright min
@@ -893,7 +921,8 @@ namespace ExtUI
         currentPage = DWIN_PAGE_TOOLS;
       else if (recdat.data[0] == 1);//TODO: start nozzle calib
       else if (recdat.data[0] == 2);//TODO: start bed calib
-      else if (recdat.data[0] == 3);//TODO: store settings
+      else if (recdat.data[0] == 3)
+        storeSettings();
       break;
     case DWIN_VP_LEVELING:
       if (recdat.data[0] == 0);//TODO: torno a settings se non ancora cominciato o gia' finito
@@ -902,7 +931,8 @@ namespace ExtUI
       else if (recdat.data[0] == 3);//TODO: z -0.1mm
       else if (recdat.data[0] == 4);//TODO: aux leveling
       else if (recdat.data[0] == 5);//TODO: measuring
-      else if (recdat.data[0] == 6);//TODO: store settings
+      else if (recdat.data[0] == 6)
+        storeSettings();
       break;
     case DWIN_VP_MOVE_FILAMENT:
       if (recdat.data[0] == 0)
@@ -931,15 +961,17 @@ namespace ExtUI
         currentPage = DWIN_PAGE_TEMP_MANUAL;
       else if (recdat.data[0] == 3) {
         FanStatus = !FanStatus;
-        currentPage = FanStatus ? DWIN_PAGE_TEMP_FON : DWIN_PAGE_TEMP_FOFF;
+        changeFanPage();
       }
       else if (recdat.data[0] >= 5 && recdat.data[0] <= 7) {
         if (recdat.data[0] == 5);//TODO: impostare temperature PLA
         else if (recdat.data[0] == 6);//TODO: impostare temperature ABS
 
-        currentPage = FanStatus ? DWIN_PAGE_TEMP_FON : DWIN_PAGE_TEMP_FOFF;
+        changeFanPage();
       }
-      //TODO: gestire tasto cooling? value f1=yes f0=no
+      else if(recdat.data[0] == 0xF1) {
+        //TODO: cooling
+      } else if (recdat.data[0] == 0xF0);//TODO: do nothing?
       break;
     case DWIN_VP_FILE_SEL:
       if (recdat.data[0] == 0)
@@ -949,7 +981,7 @@ namespace ExtUI
         currentPage = DWIN_PAGE_PRINTING;
       }
       else if (recdat.data[0] == 2);//TODO: scorro giu' (visualizzo elementi sucessivi)
-      else if (recdat.data[0] == 3);//TODO:  scorro su' (visualizzo elementi preccedenti)
+      else if (recdat.data[0] == 3);//TODO: scorro su' (visualizzo elementi preccedenti)
       else if (recdat.data[0] == 4);//TODO: refresh sd card
       break;
     case DWIN_VP_PRINTING:
@@ -959,30 +991,31 @@ namespace ExtUI
         currentPage = DWIN_PAGE_PRINT_ADJ;
       else if (recdat.data[0] == 2)
         currentPage = DWIN_PAGE_MAIN;
-      else if (recdat.data[0] == 3);//TODO: store settings
+      else if (recdat.data[0] == 3)
+        storeSettings();
       break;
     case DWIN_VP_PRINTING_STOP:
       if (recdat.data[0] == 0xF1) {
         currentPage = DWIN_PAGE_PRINT_END;
-        //TODO: stop printing
-        //TODO: cambiare pagina
+        stopPrint();
+        rtscheck.RTS_SndData(ExchangePageBase + currentPage, ExchangepageAddr);
       } else if (recdat.data[0] == 0xF0);//TODO: do nothing?
       break;
     case DWIN_VP_PRINTING_PAUSE:
       if (recdat.data[0] == 1) {
-        //TODO: resume printing
         currentPage = DWIN_PAGE_PRINTING;
+        resumePrint();
+        rtscheck.RTS_SndData(ExchangePageBase + currentPage, ExchangepageAddr);
       }
       else if(recdat.data[0] == 0xF1) {
         currentPage = DWIN_PAGE_PRINT_PAUSE;
-        //TODO: pause printing
-        //TODO: cambiare pagina
+        pausePrint();
+        rtscheck.RTS_SndData(ExchangePageBase + currentPage, ExchangepageAddr);
       } else if (recdat.data[0] == 0xF0);//TODO: do nothing?
       break;
     case DWIN_VP_TEMP_MANUAL:
       if (recdat.data[0] == 0)
-        currentPage = FanStatus ? DWIN_PAGE_TEMP_FON : DWIN_PAGE_TEMP_FOFF;
-        //TODO: cambiare pagina
+        changeFanPage();
       else if (recdat.data[0] == 1);//TODO: cooling nozzle
       else if (recdat.data[0] == 2);//TODO: cooling bed
       break;
