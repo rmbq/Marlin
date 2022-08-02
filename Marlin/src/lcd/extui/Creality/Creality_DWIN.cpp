@@ -82,9 +82,11 @@ namespace ExtUI
   uint16_t pid_bedAutoTemp = 70;
 #endif
 
+  dwin_pages_e currentPage = DWIN_PAGE_START;
+
   void onStartup()
   {
-    DWIN_SERIAL.begin(115200);
+    DWIN_SERIAL.begin(76800);
     rtscheck.recdat.head[0] = rtscheck.snddat.head[0] = FHONE;
     rtscheck.recdat.head[1] = rtscheck.snddat.head[1] = FHTWO;
     memset(rtscheck.databuf, 0, sizeof(rtscheck.databuf));
@@ -284,7 +286,7 @@ namespace ExtUI
     case 3:
       SERIAL_ECHOLNPGM_P(PSTR("==waitway 3=="));
       // if(isPositionKnown() && (getActualTemp_celsius(BED) >= (getTargetTemp_celsius(BED)-1))) {
-      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
+      rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_LEVELING, ExchangepageAddr);
       waitway = 7;
       // return;
       //}
@@ -367,10 +369,7 @@ namespace ExtUI
         rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_MAIN, ExchangepageAddr);
         reEntryPrevent = false;
       }
-      if (startprogress <= 100)
-        rtscheck.RTS_SndData(startprogress, StartIcon);
-      else
-        rtscheck.RTS_SndData(startprogress - 100, StartIcon + 1);
+      rtscheck.RTS_SndData(startprogress, StartIcon);
     }
 
     if (isPrinting())
@@ -554,7 +553,7 @@ namespace ExtUI
 
       case DGUS_IDLE: // Waiting for the first header byte
         receivedbyte = DWIN_SERIAL.read();
-        // SERIAL_ECHOLNPGM("< ",receivedbyte);
+        SERIAL_ECHOLNPGM("< ",receivedbyte);
         if (FHONE == receivedbyte)
           rx_datagram_state = DGUS_HEADER1_SEEN;
         break;
@@ -574,22 +573,27 @@ namespace ExtUI
         break;
 
       case DGUS_WAIT_TELEGRAM: // wait for complete datagram to arrive.
-        if (DWIN_SERIAL.available() < rx_datagram_len)
-          return -1;
+        //if (DWIN_SERIAL.available() < rx_datagram_len)
+          //return -1;
 
         Initialized = true; // We've talked to it, so we defined it as initialized.
         uint8_t command = DWIN_SERIAL.read();
-
-        // DEBUGLCDCOMM_ECHOPAIR("# ", command);
+        if(command != 0x82) {
+          SERIAL_ECHOLNPGM("WAIT 4: ", rx_datagram_len);
+          SERIAL_ECHOLNPGM("COMMAND: ", command);
+        }
 
         uint8_t readlen = rx_datagram_len - 1; // command is part of len.
         unsigned char tmp[rx_datagram_len - 1];
         unsigned char *ptmp = tmp;
         while (readlen--)
         {
-          receivedbyte = DWIN_SERIAL.read();
+          int r = DWIN_SERIAL.read();
           // DEBUGLCDCOMM_ECHOPAIR(" ", receivedbyte);
-          *ptmp++ = receivedbyte;
+          if(r != -1 && command != 0x82) {
+            *ptmp++ = r;
+            SERIAL_ECHOLNPGM("RCV: ", r);
+          }
         }
         // DEBUGLCDCOMM_ECHOPGM(" # ");
         //  mostly we'll get this: 5A A5 03 82 4F 4B -- ACK on 0x82, so discard it.
@@ -609,6 +613,7 @@ namespace ExtUI
         |           Command          DataLen (in Words) */
         if (command == VarAddr_R)
         {
+          SERIAL_ECHOPGM_P("RECEIVED TELEGRAM 83\n");
           const uint16_t vp = tmp[0] << 8 | tmp[1];
 
           const uint8_t dlen = tmp[2] << 1; // Convert to Bytes. (Display works with words)
@@ -814,6 +819,177 @@ namespace ExtUI
     }
     SERIAL_ECHOLNPGM("recdat.data[0] ==", recdat.data[0]);
     SERIAL_ECHOLNPGM("recdat.addr ==", recdat.addr);
+
+    switch (recdat.addr)
+    {
+    case DWIN_VP_START:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_MAIN;
+      break;
+    case DWIN_VP_MAIN:
+      if (recdat.data[0] == 1)
+        currentPage = DWIN_PAGE_FILE_SEL;
+      else if(recdat.data[0] == 3) {//TODO: cambiare pagina via codice
+        if(FanStatus)
+          currentPage = DWIN_PAGE_TEMP_FON;
+        else
+          currentPage = DWIN_PAGE_TEMP_FOFF;
+      }
+      else if(recdat.data[0] == 4)
+        currentPage = DWIN_PAGE_SETTINGS;
+      break;
+    case DWIN_VP_SETTINGS:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_MAIN;
+      else if (recdat.data[0] == 1)
+        currentPage = DWIN_PAGE_LEVELING;
+      else if (recdat.data[0] == 2)
+        currentPage = DWIN_PAGE_MOVE_FILAMENT;
+      else if (recdat.data[0] == 3)
+        currentPage = DWIN_PAGE_MOVE_10;
+      else if (recdat.data[0] == 4);//TODO: disable motor
+      else if (recdat.data[0] == 5)
+        currentPage = DWIN_PAGE_TOOLS;
+      else if (recdat.data[0] == 6)
+        currentPage = DWIN_PAGE_INFO;
+      break;
+    case DWIN_VP_TOOLS:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_SETTINGS;
+      else if (recdat.data[0] == 1);//TODO: reset bl touch
+      else if (recdat.data[0] == 2)
+        currentPage = DWIN_PAGE_STEP_LVL;
+      else if (recdat.data[0] == 3)
+        currentPage = DWIN_PAGE_SCREEN_CFG;
+      else if (recdat.data[0] == 4);//TODO: initialize eeprom
+      else if (recdat.data[0] == 5)
+        currentPage = DWIN_PAGE_PID_LVL;
+      else if (recdat.data[0] == 6);//TODO: store settings
+      break;
+    case DWIN_VP_STEP_LVL:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_TOOLS;
+      else if (recdat.data[0] == 1)
+        currentPage = DWIN_PAGE_SPEED_CFG;
+      else if (recdat.data[0] == 2);//TODO: store settings
+      break;
+    case DWIN_VP_SPEED_CFG:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_STEP_LVL;
+      else if (recdat.data[0] == 1);//TODO: store settings
+      break;
+    case DWIN_VP_DISPLAY_CFG:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_TOOLS;
+      else if (recdat.data[0] == 1);//TODO: store settings
+      else if (recdat.data[0] == 11);//TODO: vol off
+      else if (recdat.data[0] == 12);//TODO: vol full
+      else if (recdat.data[0] == 13);//TODO: bright min
+      else if (recdat.data[0] == 14);//TODO: brigth max
+      else if (recdat.data[0] == 16);//TODO: rotate screen
+      break;
+    case DWIN_VP_PID_LVL:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_TOOLS;
+      else if (recdat.data[0] == 1);//TODO: start nozzle calib
+      else if (recdat.data[0] == 2);//TODO: start bed calib
+      else if (recdat.data[0] == 3);//TODO: store settings
+      break;
+    case DWIN_VP_LEVELING:
+      if (recdat.data[0] == 0);//TODO: torno a settings se non ancora cominciato o gia' finito
+      else if (recdat.data[0] == 1);//TODO: home axis
+      else if (recdat.data[0] == 2);//TODO: z +0.1mm
+      else if (recdat.data[0] == 3);//TODO: z -0.1mm
+      else if (recdat.data[0] == 4);//TODO: aux leveling
+      else if (recdat.data[0] == 5);//TODO: measuring
+      else if (recdat.data[0] == 6);//TODO: store settings
+      break;
+    case DWIN_VP_MOVE_FILAMENT:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_SETTINGS;
+      else if (recdat.data[0] == 1);//TODO: left retract 
+      else if (recdat.data[0] == 2);//TODO: left advance
+      else if (recdat.data[0] == 3);//TODO: right retract
+      else if (recdat.data[0] == 4);//TODO: reght advance
+      break;
+    case DWIN_VP_MOVE_X:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_SETTINGS;
+      else if (recdat.data[0] == 1);//TODO: home axis
+      break;
+    case DWIN_VP_INFO:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_SETTINGS;
+      break;
+    case DWIN_VP_TEMP_F:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_SETTINGS;
+      else if (recdat.data[0] == 1) {
+        currentPage = FanStatus ? DWIN_PAGE_PLA_ABS_FON : DWIN_PAGE_PLA_ABS_FOFF;
+      }
+      else if (recdat.data[0] == 2)
+        currentPage = DWIN_PAGE_TEMP_MANUAL;
+      else if (recdat.data[0] == 3) {
+        FanStatus = !FanStatus;
+        currentPage = FanStatus ? DWIN_PAGE_TEMP_FON : DWIN_PAGE_TEMP_FOFF;
+      }
+      else if (recdat.data[0] >= 5 && recdat.data[0] <= 7) {
+        if (recdat.data[0] == 5);//TODO: impostare temperature PLA
+        else if (recdat.data[0] == 6);//TODO: impostare temperature ABS
+
+        currentPage = FanStatus ? DWIN_PAGE_TEMP_FON : DWIN_PAGE_TEMP_FOFF;
+      }
+      //TODO: gestire tasto cooling? value f1=yes f0=no
+      break;
+    case DWIN_VP_FILE_SEL:
+      if (recdat.data[0] == 0)
+        currentPage = DWIN_PAGE_MAIN;
+      else if (recdat.data[0] == 1) {
+        //TODO: se il file selezionato e' valido
+        currentPage = DWIN_PAGE_PRINTING;
+      }
+      else if (recdat.data[0] == 2);//TODO: scorro giu' (visualizzo elementi sucessivi)
+      else if (recdat.data[0] == 3);//TODO:  scorro su' (visualizzo elementi preccedenti)
+      else if (recdat.data[0] == 4);//TODO: refresh sd card
+      break;
+    case DWIN_VP_PRINTING:
+      if (recdat.data[0] == 0)//back from adjust
+        currentPage = DWIN_PAGE_PRINTING;
+      else if (recdat.data[0] == 1)
+        currentPage = DWIN_PAGE_PRINT_ADJ;
+      else if (recdat.data[0] == 2)
+        currentPage = DWIN_PAGE_MAIN;
+      else if (recdat.data[0] == 3);//TODO: store settings
+      break;
+    case DWIN_VP_PRINTING_STOP:
+      if (recdat.data[0] == 0xF1) {
+        currentPage = DWIN_PAGE_PRINT_END;
+        //TODO: stop printing
+        //TODO: cambiare pagina
+      } else if (recdat.data[0] == 0xF0);//TODO: do nothing?
+      break;
+    case DWIN_VP_PRINTING_PAUSE:
+      if (recdat.data[0] == 1) {
+        //TODO: resume printing
+        currentPage = DWIN_PAGE_PRINTING;
+      }
+      else if(recdat.data[0] == 0xF1) {
+        currentPage = DWIN_PAGE_PRINT_PAUSE;
+        //TODO: pause printing
+        //TODO: cambiare pagina
+      } else if (recdat.data[0] == 0xF0);//TODO: do nothing?
+      break;
+    case DWIN_VP_TEMP_MANUAL:
+      if (recdat.data[0] == 0)
+        currentPage = FanStatus ? DWIN_PAGE_TEMP_FON : DWIN_PAGE_TEMP_FOFF;
+        //TODO: cambiare pagina
+      else if (recdat.data[0] == 1);//TODO: cooling nozzle
+      else if (recdat.data[0] == 2);//TODO: cooling bed
+      break;
+    default:
+      break;
+    }
+/****************************************************************************************************************************/
     for (int i = 0; Addrbuf[i] != 0; i++)
     {
       if (recdat.addr == Addrbuf[i])
@@ -909,7 +1085,7 @@ namespace ExtUI
         fileIndex = 0;
         recordcount = 0;
         SERIAL_ECHOLNPGM_P(PSTR("Handle Data PrintFile Post"));
-        RTS_SndData(ExchangePageBase + DWIN_PAGE_CHOOSE_FILE, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_FILE_SEL, ExchangepageAddr);
       }
       else if (recdat.data[0] == 2) // return after printing result.
       {
@@ -1399,7 +1575,7 @@ namespace ExtUI
           injectCommands_P(PSTR("G1F1000Z0.0"));
         waitway = 2;
 
-        RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_LEVELING, ExchangepageAddr);
       }
       else if (recdat.data[0] == 2) // Exchange filement
       {
@@ -1443,7 +1619,7 @@ namespace ExtUI
       }
       if (recdat.data[0] == 2) // return to the Level mode page
       {
-        RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_LEVELING, ExchangepageAddr);
       }
       break;
 
@@ -1517,7 +1693,7 @@ namespace ExtUI
           rtscheck.RTS_SndData(0, AutolevelVal + abl_probe_index * 2);
           ++abl_probe_index;
         }
-        RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
+        RTS_SndData(ExchangePageBase + DWIN_PAGE_LEVELING, ExchangepageAddr);
         injectCommands_P(PSTR(MEASURING_GCODE));
 #endif
         break;
@@ -2545,7 +2721,7 @@ namespace ExtUI
   {
     if (waitway == 3)
       if (isPositionKnown() && (getActualTemp_celsius(BED) >= (getTargetTemp_celsius(BED) - 1)))
-        rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_BED_LVL, ExchangepageAddr);
+        rtscheck.RTS_SndData(ExchangePageBase + DWIN_PAGE_LEVELING, ExchangepageAddr);
 #if HAS_MESH
     uint8_t abl_probe_index = 0;
     for (uint8_t outer = 0; outer < GRID_MAX_POINTS_Y; outer++)
