@@ -171,6 +171,9 @@ namespace ExtUI
 #define DWIN_SERIAL LCD_SERIAL
 #endif
 
+#define DWIN_BUTTON_YES (0xF1)
+#define DWIN_BUTTON_NO (0xF0)
+
   typedef enum : unsigned long
   {
     DWIN_PAGE_START = 0,
@@ -223,7 +226,7 @@ namespace ExtUI
     DWIN_VP_MOVE_FILAMENT = 0x1056,
     DWIN_VP_MOVE_X = 0x1046,
     DWIN_VP_INFO = 0x1052,
-    DWIN_VP_TEMP_F = 0x1030,
+    DWIN_VP_TEMP = 0x1030,
     DWIN_VP_PRINTING = 0x1004,
     DWIN_VP_PRINTING_STOP = 0x1008,
     DWIN_VP_PRINTING_PAUSE = 0x100C,

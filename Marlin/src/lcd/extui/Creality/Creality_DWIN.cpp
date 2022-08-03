@@ -86,7 +86,7 @@ namespace ExtUI
 
   void onStartup()
   {
-    DWIN_SERIAL.begin(76800);
+    DWIN_SERIAL.begin(115200);
     rtscheck.recdat.head[0] = rtscheck.snddat.head[0] = FHONE;
     rtscheck.recdat.head[1] = rtscheck.snddat.head[1] = FHTWO;
     memset(rtscheck.databuf, 0, sizeof(rtscheck.databuf));
@@ -119,7 +119,7 @@ namespace ExtUI
     rtscheck.RTS_SndData(getActualTemp_celsius(BED), Bedtemp);
     /***************transmit Fan speed to screen*****************/
     rtscheck.RTS_SndData(2, FanKeyIcon); // turn 0ff fan icon
-    FanStatus = true;
+    FanStatus = false;
 
     /***************transmit Printer information to screen*****************/
     for (int j = 0; j < 20; j++) // clean filename
@@ -553,53 +553,46 @@ namespace ExtUI
 
       case DGUS_IDLE: // Waiting for the first header byte
         receivedbyte = DWIN_SERIAL.read();
-        SERIAL_ECHOLNPGM("< ",receivedbyte);
+        //SERIAL_ECHOLNPGM("< ",receivedbyte);
         if (FHONE == receivedbyte)
           rx_datagram_state = DGUS_HEADER1_SEEN;
         break;
 
       case DGUS_HEADER1_SEEN: // Waiting for the second header byte
-        receivedbyte = DWIN_SERIAL.read();
-        // SERIAL_ECHOLNPGM(" ", receivedbyte);
-        rx_datagram_state = (FHTWO == receivedbyte) ? DGUS_HEADER2_SEEN : DGUS_IDLE;
+        if (DWIN_SERIAL.available() > 0) {
+          receivedbyte = DWIN_SERIAL.read();
+          //SERIAL_ECHOLNPGM(" ", receivedbyte);
+          rx_datagram_state = (FHTWO == receivedbyte) ? DGUS_HEADER2_SEEN : DGUS_IDLE;
+        }
         break;
 
       case DGUS_HEADER2_SEEN: // Waiting for the length byte
-        rx_datagram_len = DWIN_SERIAL.read();
-        // DEBUGLCDCOMM_ECHOPAIR(" (", rx_datagram_len, ") ");
+        if (DWIN_SERIAL.available() > 0) {  
+          rx_datagram_len = DWIN_SERIAL.read();
+          //DEBUGLCDCOMM_ECHOPAIR(" (", rx_datagram_len, ") ");
 
-        // Telegram min len is 3 (command and one word of payload)
-        rx_datagram_state = WITHIN(rx_datagram_len, 3, DGUS_RX_BUFFER_SIZE) ? DGUS_WAIT_TELEGRAM : DGUS_IDLE;
+          //Telegram min len is 3 (command and one word of payload)
+          rx_datagram_state = WITHIN(rx_datagram_len, 3, DGUS_RX_BUFFER_SIZE) ? DGUS_WAIT_TELEGRAM : DGUS_IDLE;
+        }
         break;
 
       case DGUS_WAIT_TELEGRAM: // wait for complete datagram to arrive.
-        //if (DWIN_SERIAL.available() < rx_datagram_len)
-          //return -1;
+        if (DWIN_SERIAL.available() < rx_datagram_len)
+          return -1;
 
         Initialized = true; // We've talked to it, so we defined it as initialized.
-        uint8_t command = DWIN_SERIAL.read();
-        if(command != 0x82) {
-          SERIAL_ECHOLNPGM("WAIT 4: ", rx_datagram_len);
-          SERIAL_ECHOLNPGM("COMMAND: ", command);
-        }
 
-        uint8_t readlen = rx_datagram_len - 1; // command is part of len.
-        unsigned char tmp[rx_datagram_len - 1];
+        unsigned char tmp[rx_datagram_len];
         unsigned char *ptmp = tmp;
-        while (readlen--)
-        {
-          int r = DWIN_SERIAL.read();
-          // DEBUGLCDCOMM_ECHOPAIR(" ", receivedbyte);
-          if(r != -1 && command != 0x82) {
-            *ptmp++ = r;
-            SERIAL_ECHOLNPGM("RCV: ", r);
-          }
-        }
-        // DEBUGLCDCOMM_ECHOPGM(" # ");
+        while (rx_datagram_len--)
+          *ptmp++ = DWIN_SERIAL.read();
+
+        uint8_t command = tmp[0];
+        ptmp = tmp + 1;
+
         //  mostly we'll get this: 5A A5 03 82 4F 4B -- ACK on 0x82, so discard it.
-        if (command == VarAddr_W && 'O' == tmp[0] && 'K' == tmp[1])
+        if (command == VarAddr_W && 'O' == ptmp[0] && 'K' == ptmp[1])
         {
-          // DEBUG_ECHOLNPGM(">");
           rx_datagram_state = DGUS_IDLE;
           break;
         }
@@ -614,22 +607,22 @@ namespace ExtUI
         if (command == VarAddr_R)
         {
           SERIAL_ECHOPGM_P("RECEIVED TELEGRAM 83\n");
-          const uint16_t vp = tmp[0] << 8 | tmp[1];
+          const uint16_t vp = ptmp[0] << 8 | ptmp[1];
 
-          const uint8_t dlen = tmp[2] << 1; // Convert to Bytes. (Display works with words)
+          const uint8_t dlen = ptmp[2] << 1; // Convert to Bytes. (Display works with words)
           // SERIAL_ECHOLNPGM(" vp=", vp, " dlen=", dlen);
           recdat.addr = vp;
-          recdat.len = tmp[2];
+          recdat.len = ptmp[2];
           for (unsigned int i = 0; i < dlen; i += 2)
           {
-            recdat.data[i / 2] = tmp[3 + i];
-            recdat.data[i / 2] = (recdat.data[i / 2] << 8) | tmp[4 + i];
+            recdat.data[i / 2] = ptmp[3 + i];
+            recdat.data[i / 2] = (recdat.data[i / 2] << 8) | ptmp[4 + i];
           }
 
-          SERIAL_ECHOLNPGM("VP received: ", vp, " - len ", tmp[2]);
+          SERIAL_ECHOLNPGM("VP received: ", vp, " - len ", ptmp[2]);
 
-          SERIAL_ECHOLNPGM("d1: ", tmp[3], " - d2 ", tmp[4]);
-          SERIAL_ECHOLNPGM("d3: ", tmp[5], " - d4 ", tmp[6]);
+          SERIAL_ECHOLNPGM("d1: ", ptmp[3], " - d2 ", ptmp[4]);
+          SERIAL_ECHOLNPGM("d3: ", ptmp[5], " - d4 ", ptmp[6]);
 
           rx_datagram_state = DGUS_IDLE;
           return 2;
@@ -951,7 +944,7 @@ namespace ExtUI
       if (recdat.data[0] == 0)
         currentPage = DWIN_PAGE_SETTINGS;
       break;
-    case DWIN_VP_TEMP_F:
+    case DWIN_VP_TEMP:
       if (recdat.data[0] == 0)
         currentPage = DWIN_PAGE_SETTINGS;
       else if (recdat.data[0] == 1) {
@@ -961,6 +954,14 @@ namespace ExtUI
         currentPage = DWIN_PAGE_TEMP_MANUAL;
       else if (recdat.data[0] == 3) {
         FanStatus = !FanStatus;
+        
+        if(FanStatus) SERIAL_ECHOLNPGM_P(PSTR("FAN IS NOW ON"));
+        else SERIAL_ECHOLNPGM_P(PSTR("FAN IS NOW OFF"));
+
+        if(FanStatus)
+          setTargetFan_percent(100, FAN0);
+        else
+          setTargetFan_percent(0, FAN0);
         changeFanPage();
       }
       else if (recdat.data[0] >= 5 && recdat.data[0] <= 7) {
@@ -969,9 +970,9 @@ namespace ExtUI
 
         changeFanPage();
       }
-      else if(recdat.data[0] == 0xF1) {
+      else if(recdat.data[0] == DWIN_BUTTON_YES) {
         //TODO: cooling
-      } else if (recdat.data[0] == 0xF0);//TODO: do nothing?
+      } else if (recdat.data[0] == DWIN_BUTTON_NO);//TODO: do nothing?
       break;
     case DWIN_VP_FILE_SEL:
       if (recdat.data[0] == 0)
@@ -995,11 +996,11 @@ namespace ExtUI
         storeSettings();
       break;
     case DWIN_VP_PRINTING_STOP:
-      if (recdat.data[0] == 0xF1) {
+      if (recdat.data[0] == DWIN_BUTTON_YES) {
         currentPage = DWIN_PAGE_PRINT_END;
         stopPrint();
         rtscheck.RTS_SndData(ExchangePageBase + currentPage, ExchangepageAddr);
-      } else if (recdat.data[0] == 0xF0);//TODO: do nothing?
+      } else if (recdat.data[0] == DWIN_BUTTON_NO);//TODO: do nothing?
       break;
     case DWIN_VP_PRINTING_PAUSE:
       if (recdat.data[0] == 1) {
@@ -1007,11 +1008,11 @@ namespace ExtUI
         resumePrint();
         rtscheck.RTS_SndData(ExchangePageBase + currentPage, ExchangepageAddr);
       }
-      else if(recdat.data[0] == 0xF1) {
+      else if(recdat.data[0] == DWIN_BUTTON_YES) {
         currentPage = DWIN_PAGE_PRINT_PAUSE;
         pausePrint();
         rtscheck.RTS_SndData(ExchangePageBase + currentPage, ExchangepageAddr);
-      } else if (recdat.data[0] == 0xF0);//TODO: do nothing?
+      } else if (recdat.data[0] == DWIN_BUTTON_NO);//TODO: do nothing?
       break;
     case DWIN_VP_TEMP_MANUAL:
       if (recdat.data[0] == 0)
@@ -1022,6 +1023,7 @@ namespace ExtUI
     default:
       break;
     }
+#if 0
 /****************************************************************************************************************************/
     for (int i = 0; Addrbuf[i] != 0; i++)
     {
@@ -1339,7 +1341,7 @@ namespace ExtUI
         RTS_SndData(PREHEAT_2_TEMP_HOTEND, NozzlePreheat);
         RTS_SndData(PREHEAT_2_TEMP_BED, BedPreheat);
       }
-      else if (recdat.data[0] == 0xF1)
+      else if (recdat.data[0] == DWIN_BUTTON_YES)
       {
 // InforShowStatus = true;
 #if FAN_COUNT > 0
@@ -2378,7 +2380,7 @@ namespace ExtUI
       SERIAL_ECHOLNPGM_P(PSTR("No Match :"));
       break;
     }
-
+#endif
     memset(&recdat, 0, sizeof(recdat));
     recdat.head[0] = FHONE;
     recdat.head[1] = FHTWO;
