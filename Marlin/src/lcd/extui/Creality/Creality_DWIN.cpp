@@ -1649,8 +1649,13 @@ void RTSSHOW::RTS_HandleData()
       }
 
       float targetPos = ((float)recdat.data[0]) / 10;
+      float axtmp = getAxisPosition_mm(axis);
 
-      if (targetPos < min)
+      if(axtmp < (max / 2) && targetPos > max)
+        targetPos = min;
+      else if(axtmp > (max / 2) && targetPos < min)
+        targetPos = max;
+      else if (targetPos < min)
         targetPos = min;
       else if (targetPos > max)
         targetPos = max;
