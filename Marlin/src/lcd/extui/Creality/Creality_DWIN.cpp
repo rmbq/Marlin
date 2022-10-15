@@ -428,13 +428,13 @@ void onIdle()
   #if HAS_PID_HEATING
     rtscheck.RTS_SndData(pid_hotendAutoTemp, HotendPID_AutoTmp);
     rtscheck.RTS_SndData(pid_bedAutoTemp, BedPID_AutoTmp);
-    rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kp(E0) * 10), HotendPID_P);
-    rtscheck.RTS_SndData((unsigned int)(getPIDValues_Ki(E0) * 10), HotendPID_I);
-    rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kd(E0) * 10), HotendPID_D);
+    rtscheck.RTS_SndData((unsigned int)(getPID_Kp(E0) * 10), HotendPID_P);
+    rtscheck.RTS_SndData((unsigned int)(getPID_Ki(E0) * 10), HotendPID_I);
+    rtscheck.RTS_SndData((unsigned int)(getPID_Kd(E0) * 10), HotendPID_D);
     #if ENABLED(PIDTEMPBED)
-      rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kp() * 10), BedPID_P);
-      rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Ki() * 10), BedPID_I);
-      rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kd() * 10), BedPID_D);
+      rtscheck.RTS_SndData((unsigned int)(getBedPID_Kp() * 10), BedPID_P);
+      rtscheck.RTS_SndData((unsigned int)(getBedPID_Ki() * 10), BedPID_I);
+      rtscheck.RTS_SndData((unsigned int)(getBedPID_Kd() * 10), BedPID_D);
     #endif
   #endif
 
@@ -1278,23 +1278,23 @@ void RTSSHOW::RTS_HandleData()
 
         #if HAS_PID_HEATING
           else if (recdat.addr == HotendPID_P) {
-            setPIDValues(tmp_float_handling*10, getPIDValues_Ki(getActiveTool()), getPIDValues_Kd(getActiveTool()), getActiveTool());
+            setPID(tmp_float_handling*10, getPID_Ki(getActiveTool()), getPID_Kd(getActiveTool()), getActiveTool());
           }
           else if (recdat.addr == HotendPID_I) {
-            setPIDValues(getPIDValues_Kp(getActiveTool()), tmp_float_handling*10, getPIDValues_Kd(getActiveTool()), getActiveTool());
+            setPID(getPID_Kp(getActiveTool()), tmp_float_handling*10, getPID_Kd(getActiveTool()), getActiveTool());
           }
           else if (recdat.addr == HotendPID_D) {
-            setPIDValues(getPIDValues_Kp(getActiveTool()), getPIDValues_Ki(getActiveTool()), tmp_float_handling*10, getActiveTool());
+            setPID(getPID_Kp(getActiveTool()), getPID_Ki(getActiveTool()), tmp_float_handling*10, getActiveTool());
           }
           #if ENABLED(PIDTEMPBED)
             else if (recdat.addr == BedPID_P) {
-              setBedPIDValues(tmp_float_handling*10, getBedPIDValues_Ki(), getBedPIDValues_Kd());
+              setBedPID(tmp_float_handling*10, getBedPID_Ki(), getBedPID_Kd());
             }
             else if (recdat.addr == BedPID_I) {
-              setBedPIDValues(getBedPIDValues_Kp(), tmp_float_handling*10, getBedPIDValues_Kd());
+              setBedPID(getBedPID_Kp(), tmp_float_handling*10, getBedPID_Kd());
             }
             else if (recdat.addr == BedPID_D) {
-              setBedPIDValues(getBedPIDValues_Kp(), getBedPIDValues_Ki(), tmp_float_handling*10);
+              setBedPID(getBedPID_Kp(), getBedPID_Ki(), tmp_float_handling*10);
             }
           #endif
         #endif
@@ -2569,13 +2569,13 @@ void onSettingsLoaded(bool success)
     // Called for temperature PID tuning result
     rtscheck.RTS_SndData(pid_hotendAutoTemp, HotendPID_AutoTmp);
     rtscheck.RTS_SndData(pid_bedAutoTemp, BedPID_AutoTmp);
-    rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kp(E0) * 10), HotendPID_P);
-    rtscheck.RTS_SndData((unsigned int)(getPIDValues_Ki(E0) * 10), HotendPID_I);
-    rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kd(E0) * 10), HotendPID_D);
+    rtscheck.RTS_SndData((unsigned int)(getPID_Kp(E0) * 10), HotendPID_P);
+    rtscheck.RTS_SndData((unsigned int)(getPID_Ki(E0) * 10), HotendPID_I);
+    rtscheck.RTS_SndData((unsigned int)(getPID_Kd(E0) * 10), HotendPID_D);
     #if ENABLED(PIDTEMPBED)
-      rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kp() * 10), BedPID_P);
-      rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Ki() * 10), BedPID_I);
-      rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kd() * 10), BedPID_D);
+      rtscheck.RTS_SndData((unsigned int)(getBedPID_Kp() * 10), BedPID_P);
+      rtscheck.RTS_SndData((unsigned int)(getBedPID_Ki() * 10), BedPID_I);
+      rtscheck.RTS_SndData((unsigned int)(getBedPID_Kd() * 10), BedPID_D);
     #endif
     onStatusChanged("PID Tune Finished");
   }
