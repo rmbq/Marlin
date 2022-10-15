@@ -2656,7 +2656,7 @@
 //
 // ADC Temp Sensors (Thermistor or Thermocouple with amplifier ADC interface)
 //
-#define HAS_ADC_TEST(P) (PIN_EXISTS(TEMP_##P) && TEMP_SENSOR_##P != 0 && !TEMP_SENSOR_IS_MAX_TC(P) && !TEMP_SENSOR_##P##_IS_DUMMY)
+#define HAS_ADC_TEST(P) (TEMP_SENSOR(P) && PIN_EXISTS(TEMP_##P) && !TEMP_SENSOR_IS_MAX_TC(P) && !TEMP_SENSOR_##P##_IS_DUMMY)
 #if HOTENDS > 0 && HAS_ADC_TEST(0)
   #define HAS_TEMP_ADC_0 1
 #endif
@@ -3123,73 +3123,6 @@
 #if ANY(HAS_X_MS_PINS, HAS_X2_MS_PINS, HAS_Y_MS_PINS, HAS_Y2_MS_PINS, HAS_SOME_Z_MS_PINS, HAS_I_MS_PINS, HAS_J_MS_PINS, HAS_K_MS_PINS, HAS_U_MS_PINS, HAS_V_MS_PINS, HAS_W_MS_PINS, HAS_SOME_E_MS_PINS)
   #define HAS_MICROSTEPS 1
 #endif
-
-#if HAS_MICROSTEPS
-
-  // MS1 MS2 MS3 Stepper Driver Microstepping mode table
-  #ifndef MICROSTEP1
-    #define MICROSTEP1 LOW,LOW,LOW
-  #endif
-  #if ENABLED(HEROIC_STEPPER_DRIVERS)
-    #ifndef MICROSTEP128
-      #define MICROSTEP128 LOW,HIGH,LOW
-    #endif
-  #else
-    #ifndef MICROSTEP2
-      #define MICROSTEP2 HIGH,LOW,LOW
-    #endif
-    #ifndef MICROSTEP4
-      #define MICROSTEP4 LOW,HIGH,LOW
-    #endif
-  #endif
-  #ifndef MICROSTEP8
-    #define MICROSTEP8 HIGH,HIGH,LOW
-  #endif
-  #ifdef __SAM3X8E__
-    #if MB(ALLIGATOR)
-      #ifndef MICROSTEP16
-        #define MICROSTEP16 LOW,LOW,LOW
-      #endif
-      #ifndef MICROSTEP32
-        #define MICROSTEP32 HIGH,HIGH,LOW
-      #endif
-    #else
-      #ifndef MICROSTEP16
-        #define MICROSTEP16 HIGH,HIGH,LOW
-      #endif
-    #endif
-  #else
-    #ifndef MICROSTEP16
-      #define MICROSTEP16 HIGH,HIGH,LOW
-    #endif
-  #endif
-
-  #ifdef MICROSTEP1
-    #define HAS_MICROSTEP1 1
-  #endif
-  #ifdef MICROSTEP2
-    #define HAS_MICROSTEP2 1
-  #endif
-  #ifdef MICROSTEP4
-    #define HAS_MICROSTEP4 1
-  #endif
-  #ifdef MICROSTEP8
-    #define HAS_MICROSTEP8 1
-  #endif
-  #ifdef MICROSTEP16
-    #define HAS_MICROSTEP16 1
-  #endif
-  #ifdef MICROSTEP32
-    #define HAS_MICROSTEP32 1
-  #endif
-  #ifdef MICROSTEP64
-    #define HAS_MICROSTEP64 1
-  #endif
-  #ifdef MICROSTEP128
-    #define HAS_MICROSTEP128 1
-  #endif
-
-#endif // HAS_MICROSTEPS
 
 /**
  * Heater signal inversion defaults
