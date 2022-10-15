@@ -41,4 +41,10 @@
   #endif
 #endif
 
+#if HAS_TMC_UART
+  #define E0_SERIAL_TX_PIN PA14
+  #define E0_SERIAL_RX_PIN PA14
+  #define TMC_BAUD_RATE 19600
+#endif
+
 #include "pins_CREALITY_V45x.h"
