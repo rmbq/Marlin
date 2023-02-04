@@ -3871,7 +3871,7 @@ static_assert(_PLUS_TEST(4), "HOMING_FEEDRATE_MM_M values must be positive.");
   #error "LED_CONTROL_MENU requires an LCD controller that implements the menu."
 #endif
 
-#if ENABLED(CUSTOM_MENU_MAIN) && NONE(HAS_MARLINUI_MENU, TOUCH_UI_FTDI_EVE, TFT_LVGL_UI)
+#if ENABLED(CUSTOM_MENU_MAIN) && NONE(HAS_MARLINUI_MENU, TOUCH_UI_FTDI_EVE, TFT_LVGL_UI, FORCE10SPRODISPLAY)
   #error "CUSTOM_MENU_MAIN requires an LCD controller that implements the menu."
 #endif
 
