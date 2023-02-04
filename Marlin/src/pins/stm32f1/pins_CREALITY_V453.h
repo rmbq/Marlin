@@ -41,4 +41,24 @@
   #endif
 #endif
 
+#if HAS_TMC_UART
+  #define E0_SERIAL_TX_PIN PA14
+  #define E0_SERIAL_RX_PIN PA14
+  #define TMC_BAUD_RATE 19600
+#endif
+
+#if ENABLED(CR10_STOCKDISPLAY)
+  #define LCD_PINS_RS                EXP3_07_PIN
+  #define LCD_PINS_ENABLE            EXP3_08_PIN
+  #define LCD_PINS_D4                EXP3_06_PIN
+
+  #define BTN_ENC                    EXP3_02_PIN
+  #define BTN_EN1                    EXP3_03_PIN
+  #define BTN_EN2                    EXP3_05_PIN
+
+  #ifndef HAS_PIN_27_BOARD
+    #define BEEPER_PIN               EXP3_01_PIN
+  #endif
+#endif
+
 #include "pins_CREALITY_V45x.h"
