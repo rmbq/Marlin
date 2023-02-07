@@ -337,10 +337,14 @@ namespace ExtUI {
       rtscheck.RTS_SndData(((unsigned int)getAxisMaxFeedrate_mm_s(Z)), Feed_Z);
       rtscheck.RTS_SndData(((unsigned int)getAxisMaxFeedrate_mm_s(E0)), Feed_E);
 
+#if ENABLED(CLASSIC_JERK)
       rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(X) * 100), Jerk_X);
       rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(Y) * 100), Jerk_Y);
       rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(Z) * 100), Jerk_Z);
       rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(E0) * 100), Jerk_E);
+#else
+      rtscheck.RTS_SndData(((unsigned int)getJunctionDeviation_mm() * 100), Jerk_X);
+#endif
 
       #if HAS_HOTEND_OFFSET
         rtscheck.RTS_SndData(((unsigned int)getNozzleOffset_mm(X, E1) * 10), T2Offset_X);
@@ -1029,6 +1033,10 @@ namespace ExtUI {
             else if (recdat.addr == Jerk_E) {
               setAxisMaxJerk_mm_s(tmp_float_handling, E0);
               setAxisMaxJerk_mm_s(tmp_float_handling, E1);
+            }
+          #else
+            else if (recdat.addr == Jerk_X) {
+              setJunctionDeviation_mm(tmp_float_handling);
             }
           #endif
 
