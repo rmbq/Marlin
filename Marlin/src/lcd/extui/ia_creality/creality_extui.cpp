@@ -338,7 +338,7 @@ namespace ExtUI {
       rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(Z) * 100), Jerk_Z);
       rtscheck.RTS_SndData(((unsigned int)getAxisMaxJerk_mm_s(E0) * 100), Jerk_E);
 #else
-      rtscheck.RTS_SndData(((unsigned int)getJunctionDeviation_mm() * 100), Jerk_X);
+      rtscheck.RTS_SndData(getJunctionDeviation_mm() * 100, JuncDev);
 #endif
 
       #if HAS_HOTEND_OFFSET
@@ -684,7 +684,11 @@ namespace ExtUI {
       case T2Offset_X ... T2StepMM_E:
       case Accel_X ... Accel_E:
       case Feed_X ... Feed_E:
+#if ENABLED(CLASSIC_JERK)
       case Jerk_X ... Jerk_E:
+#else
+      case JuncDev:
+#endif
       case RunoutToggle:
       case PowerLossToggle:
       case FanKeyIcon:
@@ -1032,7 +1036,7 @@ namespace ExtUI {
               setAxisMaxJerk_mm_s(tmp_float_handling, E1);
             }
           #else
-            else if (recdat.addr == Jerk_X) {
+            else if (recdat.addr == JuncDev) {
               setJunctionDeviation_mm(tmp_float_handling);
             }
           #endif

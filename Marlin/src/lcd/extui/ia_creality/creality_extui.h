@@ -108,10 +108,14 @@
 #define BedPID_I            0x1266
 #define BedPID_D            0x126A
 
+#if ENABLED(CLASSIC_JERK)
 #define Jerk_X              0x1270
 #define Jerk_Y              0x1272
 #define Jerk_Z              0x1274
 #define Jerk_E              0x1276
+#else
+#define JuncDev             0x1270
+#endif
 
 #define Feed_X              0x1278
 #define Feed_Y              0x127A
