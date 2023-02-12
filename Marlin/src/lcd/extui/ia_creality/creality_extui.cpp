@@ -267,29 +267,24 @@ namespace ExtUI {
     TERN_(CASE_LIGHT_ENABLE, rtscheck.RTS_SndData(getCaseLightState() ? 3 : 2, LedToggle));
     TERN_(POWER_LOSS_RECOVERY, rtscheck.RTS_SndData(getPowerLossRecoveryEnabled() ? 3 : 2, PowerLossToggle));
 
-    if (startprogress == 0) {
-      startprogress += 25;
-      delay_ms(3000);     // Delay to show bootscreen
-    }
-    else if (startprogress < 250) {
-      if (isMediaInserted()) // Re init media as it happens too early on STM32 boards often
-        onMediaInserted();
-      else
-        injectCommands(F("M22\nM21"));
-      startprogress = 254;
-      DEBUG_ECHOLNPGM("  startprogress ");
-      InforShowStatus = true;
-      TPShowStatus    = false;
-      rtscheck.RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
-      reEntryPrevent = false;
-      return;
-    }
-    if (startprogress <= 100)
+    if (startprogress < 100)
+    {
+      startprogress += BOOTSCREEN_TIMEOUT / 100;
+      delay_ms(BOOTSCREEN_TIMEOUT / (BOOTSCREEN_TIMEOUT / 100)); // Delay to show bootscreen
+      if (startprogress >= 100)
+      {
+        if (isMediaInserted()) // Re init media as it happens too early on STM32 boards often
+          onMediaInserted();
+        else
+          injectCommands_P(PSTR("M22\nM21"));
+        SERIAL_ECHOLNPGM_P(PSTR("  startprogress "));
+        InforShowStatus = true;
+        TPShowStatus = false;
+        rtscheck.RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
+        reEntryPrevent = false;
+      }
       rtscheck.RTS_SndData(startprogress, StartIcon);
-    else
-      rtscheck.RTS_SndData(startprogress - 100, StartIcon + 1);
-
-    // rtscheck.RTS_SndData((startprogress++) % 5, ExchFlmntIcon);
+    }
 
     if (isPrinting()) {
       rtscheck.RTS_SndData(getActualFan_percent((fan_t)getActiveTool()), FanKeyIcon);
