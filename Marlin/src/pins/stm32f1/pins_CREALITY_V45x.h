@@ -64,8 +64,12 @@
 //
 // Probe
 //
-#ifndef PROBE_TARE_PIN
-  #define PROBE_TARE_PIN                    PA5
+#if ENABLED(PROBE_TARE)
+  #ifndef PROBE_TARE_PIN
+    #define PROBE_TARE_PIN                    PA5
+  #endif
+#else 
+  #define SERVO0_PIN                          PA5
 #endif
 
 //
