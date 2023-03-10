@@ -129,6 +129,10 @@
 #define Accel_Z             0x1284
 #define Accel_E             0x1286
 
+#if ENABLED(LIN_ADVANCE)
+#define LinAdvKFact         0x1288
+#endif
+
 #define HeatPercentIcon     0x1024
 
 #define NzBdSet             0x1032 // cooldown Hotend and Bed

@@ -319,7 +319,9 @@ namespace ExtUI {
       rtscheck.RTS_SndData(uint16_t(getAxisMaxAcceleration_mm_s2(Y)) / 100, Accel_Y);
       rtscheck.RTS_SndData(uint16_t(getAxisMaxAcceleration_mm_s2(Z)) /  10, Accel_Z);
       rtscheck.RTS_SndData(uint16_t(getAxisMaxAcceleration_mm_s2(E0)),      Accel_E);
-
+#if ENABLED(LIN_ADVANCE)
+      rtscheck.RTS_SndData(getLinearAdvance_mm_mm_s(E0) * 100, LinAdvKFact);
+#endif
       rtscheck.RTS_SndData(uint16_t(getAxisMaxFeedrate_mm_s(X)),  Feed_X);
       rtscheck.RTS_SndData(uint16_t(getAxisMaxFeedrate_mm_s(Y)),  Feed_Y);
       rtscheck.RTS_SndData(uint16_t(getAxisMaxFeedrate_mm_s(Z)),  Feed_Z);
@@ -650,6 +652,9 @@ namespace ExtUI {
       case T2Offset_X ... T2StepMM_E:
       case Accel_X ... Accel_E:
       case Feed_X ... Feed_E:
+#if ENABLED(LIN_ADVANCE)
+      case LinAdvKFact:
+#endif
 #if ENABLED(CLASSIC_JERK)
       case Jerk_X ... Jerk_E:
 #else
@@ -987,7 +992,11 @@ namespace ExtUI {
               setJunctionDeviation_mm(tmp_float_handling);
             }
           #endif
-
+          #if ENABLED(LIN_ADVANCE)
+            else if(recdat.addr == LinAdvKFact) {
+              setLinearAdvance_mm_mm_s(tmp_float_handling, E0);
+            }
+          #endif
           #if HAS_FILAMENT_SENSOR
             else if (recdat.addr == RunoutToggle) {
               setFilamentRunoutEnabled(!getFilamentRunoutEnabled());
