@@ -319,22 +319,22 @@ namespace ExtUI {
       rtscheck.RTS_SndData(uint16_t(getAxisMaxAcceleration_mm_s2(Y)) / 100, Accel_Y);
       rtscheck.RTS_SndData(uint16_t(getAxisMaxAcceleration_mm_s2(Z)) /  10, Accel_Z);
       rtscheck.RTS_SndData(uint16_t(getAxisMaxAcceleration_mm_s2(E0)),      Accel_E);
-#if ENABLED(LIN_ADVANCE)
-      rtscheck.RTS_SndData(getLinearAdvance_mm_mm_s(E0) * 100, LinAdvKFact);
-#endif
+      #if ENABLED(LIN_ADVANCE)
+        rtscheck.RTS_SndData(getLinearAdvance_mm_mm_s(E0) * 100, LinAdvKFact);
+      #endif
       rtscheck.RTS_SndData(uint16_t(getAxisMaxFeedrate_mm_s(X)),  Feed_X);
       rtscheck.RTS_SndData(uint16_t(getAxisMaxFeedrate_mm_s(Y)),  Feed_Y);
       rtscheck.RTS_SndData(uint16_t(getAxisMaxFeedrate_mm_s(Z)),  Feed_Z);
       rtscheck.RTS_SndData(uint16_t(getAxisMaxFeedrate_mm_s(E0)), Feed_E);
 
-#if ENABLED(CLASSIC_JERK)
-      rtscheck.RTS_SndData(((uint16_t)getAxisMaxJerk_mm_s(X) * 100), Jerk_X);
-      rtscheck.RTS_SndData(((uint16_t)getAxisMaxJerk_mm_s(Y) * 100), Jerk_Y);
-      rtscheck.RTS_SndData(((uint16_t)getAxisMaxJerk_mm_s(Z) * 100), Jerk_Z);
-      rtscheck.RTS_SndData(((uint16_t)getAxisMaxJerk_mm_s(E0) * 100), Jerk_E);
-#else
-      rtscheck.RTS_SndData(getJunctionDeviation_mm() * 100, JuncDev);
-#endif
+      #if ENABLED(CLASSIC_JERK)
+        rtscheck.RTS_SndData(((uint16_t)getAxisMaxJerk_mm_s(X) * 100), Jerk_X);
+        rtscheck.RTS_SndData(((uint16_t)getAxisMaxJerk_mm_s(Y) * 100), Jerk_Y);
+        rtscheck.RTS_SndData(((uint16_t)getAxisMaxJerk_mm_s(Z) * 100), Jerk_Z);
+        rtscheck.RTS_SndData(((uint16_t)getAxisMaxJerk_mm_s(E0) * 100), Jerk_E);
+      #else
+        rtscheck.RTS_SndData(getJunctionDeviation_mm() * 100, JuncDev);
+      #endif
 
       #if HAS_HOTEND_OFFSET
         rtscheck.RTS_SndData(uint16_t(getNozzleOffset_mm(X, E1)) * 10, T2Offset_X);
