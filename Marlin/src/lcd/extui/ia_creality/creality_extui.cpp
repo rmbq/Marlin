@@ -310,10 +310,10 @@ namespace ExtUI {
       else
         rtscheck.RTS_SndData(2, DisplayStandbyEnableIndicator);
 
-      rtscheck.RTS_SndData(getAxisSteps_per_mm(X)  * 10, StepMM_X);
-      rtscheck.RTS_SndData(getAxisSteps_per_mm(Y)  * 10, StepMM_Y);
-      rtscheck.RTS_SndData(getAxisSteps_per_mm(Z)  * 10, StepMM_Z);
-      rtscheck.RTS_SndData(getAxisSteps_per_mm(E0) * 10, StepMM_E);
+      rtscheck.RTS_SndData(getAxisSteps_per_mm(X)  * 100, StepMM_X);
+      rtscheck.RTS_SndData(getAxisSteps_per_mm(Y)  * 100, StepMM_Y);
+      rtscheck.RTS_SndData(getAxisSteps_per_mm(Z)  * 100, StepMM_Z);
+      rtscheck.RTS_SndData(getAxisSteps_per_mm(E0) * 100, StepMM_E);
 
       rtscheck.RTS_SndData(getAxisMaxAcceleration_mm_s2(X) / 100, Accel_X);
       rtscheck.RTS_SndData(getAxisMaxAcceleration_mm_s2(Y) / 100, Accel_Y);
@@ -951,16 +951,16 @@ namespace ExtUI {
           else
             tmp_float_handling = float(recdat.data[0]) / 100;
           if (recdat.addr == StepMM_X) {
-            setAxisSteps_per_mm(tmp_float_handling * 10, X);
+            setAxisSteps_per_mm(tmp_float_handling * 100, X);
           }
           else if (recdat.addr == StepMM_Y) {
-            setAxisSteps_per_mm(tmp_float_handling * 10, Y);
+            setAxisSteps_per_mm(tmp_float_handling * 100, Y);
           }
           else if (recdat.addr == StepMM_Z) {
-            setAxisSteps_per_mm(tmp_float_handling * 10, Z);
+            setAxisSteps_per_mm(tmp_float_handling * 100, Z);
           }
           else if (recdat.addr == StepMM_E) {
-            setAxisSteps_per_mm(tmp_float_handling * 10, E0);
+            setAxisSteps_per_mm(tmp_float_handling * 100, E0);
             #if DISABLED(DUAL_X_CARRIAGE)
               setAxisSteps_per_mm(tmp_float_handling * 10, E1);
             #endif
