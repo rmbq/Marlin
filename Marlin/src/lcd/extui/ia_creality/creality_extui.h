@@ -78,6 +78,7 @@
 #define FanKeyIcon          0x101E
 #define Flowrate            0x1300
 
+#define IdleShutdownToggle  0x101F
 #define RunoutToggle        0x1018
 #define PowerLossToggle     0x101A
 #define LedToggle           0x101C

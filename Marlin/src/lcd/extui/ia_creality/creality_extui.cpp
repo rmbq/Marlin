@@ -70,6 +70,7 @@ namespace ExtUI {
   uint16_t idleThrottling = 0;
 
   bool pause_resume_selected = false;
+  bool InactivityShutdown = false;
 
   #if HAS_PID_HEATING
     uint16_t pid_hotendAutoTemp = 150;
@@ -254,6 +255,7 @@ namespace ExtUI {
     TERN_(HAS_FILAMENT_SENSOR, rtscheck.RTS_SndData(getFilamentRunoutEnabled() ? 3 : 2, RunoutToggle));
     TERN_(CASE_LIGHT_ENABLE, rtscheck.RTS_SndData(getCaseLightState() ? 3 : 2, LedToggle));
     TERN_(POWER_LOSS_RECOVERY, rtscheck.RTS_SndData(getPowerLossRecoveryEnabled() ? 3 : 2, PowerLossToggle));
+    rtscheck.RTS_SndData(InactivityShutdown ? 3 : 2, IdleShutdownToggle);
 
     if (startprogress < 100)
     {
@@ -676,6 +678,7 @@ namespace ExtUI {
 #else
       case JuncDev:
 #endif
+      case IdleShutdownToggle:
       case RunoutToggle:
       case PowerLossToggle:
       case FanKeyIcon:
@@ -1012,6 +1015,10 @@ namespace ExtUI {
               setLinearAdvance_mm_mm_s(tmp_float_handling, E0);
             }
           #endif
+          else if(recdat.addr == IdleShutdownToggle) {
+            InactivityShutdown = !InactivityShutdown;
+            injectCommands(InactivityShutdown ? F("M85S120") : F("M85S0"));
+          }
           #if HAS_FILAMENT_SENSOR
             else if (recdat.addr == RunoutToggle) {
               setFilamentRunoutEnabled(!getFilamentRunoutEnabled());
