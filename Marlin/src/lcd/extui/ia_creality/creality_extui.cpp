@@ -83,7 +83,9 @@ namespace ExtUI {
   #ifndef IA_CREALITY_BOOT_DELAY
     #define IA_CREALITY_BOOT_DELAY 500
   #endif
-
+  #ifndef BOOTSCREEN_TIMEOUT
+    #define BOOTSCREEN_TIMEOUT 3000
+  #endif
   void onStartup() {
     DWIN_SERIAL.begin(115200);
     rtscheck.recdat.head[0] = rtscheck.snddat.head[0] = FHONE;
