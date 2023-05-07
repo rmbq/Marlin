@@ -42,9 +42,24 @@
 #endif
 
 #if HAS_TMC_UART
+  #define TMC_BAUD_RATE 38400
+#endif
+
+#if AXIS_IS_TMC_CONFIG(E0)
   #define E0_SERIAL_TX_PIN PA14
   #define E0_SERIAL_RX_PIN PA14
-  #define TMC_BAUD_RATE 19600
+#endif
+#if AXIS_IS_TMC_CONFIG(Y)
+  #define Y_SERIAL_TX_PIN PA13
+  #define Y_SERIAL_RX_PIN PA13
+#endif
+#if AXIS_IS_TMC_CONFIG(X)
+  #define X_SERIAL_TX_PIN PB2
+  #define X_SERIAL_RX_PIN PB2
+#endif
+#if AXIS_IS_TMC_CONFIG(Z)
+  #define Z_SERIAL_TX_PIN PA15
+  #define Z_SERIAL_RX_PIN PA15
 #endif
 
 #include "pins_CREALITY_V45x.h"
