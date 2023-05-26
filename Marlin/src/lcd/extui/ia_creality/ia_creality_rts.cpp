@@ -78,6 +78,7 @@ uint8_t reentryCount    = 0;
 uint16_t idleThrottling = 0;
 
 bool pause_resume_selected  = false;
+bool InactivityShutdown = false;
 
 #if HAS_PID_HEATING
   uint16_t pid_hotendAutoTemp = 150;
@@ -256,29 +257,26 @@ void RTS::onIdle() {
   TERN_(HAS_FILAMENT_SENSOR, rts.sendData(getFilamentRunoutEnabled() ? 3 : 2, RunoutToggle));
   TERN_(CASE_LIGHT_ENABLE, rts.sendData(getCaseLightState() ? 3 : 2, LedToggle));
   TERN_(POWER_LOSS_RECOVERY, rts.sendData(getPowerLossRecoveryEnabled() ? 3 : 2, PowerLossToggle));
+  rts.sendData(InactivityShutdown ? 3 : 2, IdleShutdownToggle);
 
-  if (startprogress == 0) {
-    startprogress += 25;
-    delay_ms(3000);     // Delay to show bootscreen
-  }
-  else if (startprogress < 250) {
-    if (isMediaInserted()) // Re init media as it happens too early on STM32 boards often
-      onMediaInserted();
-    else
-      injectCommands(F("M22\nM21"));
-    startprogress = 254;
-    show_status = true;
-    tpShowStatus = false;
-    rts.sendData(ExchangePageBase + 45, ExchangepageAddr);
-    no_reentry = false;
-    return;
-  }
-  if (startprogress <= 100)
+  if (startprogress < 100)
+  {
+    startprogress += BOOTSCREEN_TIMEOUT / 100;
+    delay_ms(BOOTSCREEN_TIMEOUT / (BOOTSCREEN_TIMEOUT / 100)); // Delay to show bootscreen
+    if (startprogress >= 100)
+    {
+      if (isMediaInserted()) // Re init media as it happens too early on STM32 boards often
+        onMediaInserted();
+      else
+          injectCommands_P(PSTR("M22\nM21"));
+        SERIAL_ECHOLNPGM_P(PSTR("  startprogress "));
+        show_status = true;
+        tpShowStatus = false;
+        rts.sendData(ExchangePageBase + 45, ExchangepageAddr);
+        no_reentry = false;
+    }
     rts.sendData(startprogress, StartIcon);
-  else
-    rts.sendData(startprogress - 100, StartIcon + 1);
-
-  //rts.sendData((startprogress++) % 5, ExchFlmntIcon);
+  }
 
   if (isPrinting()) {
     rts.sendData(getActualFan_percent((fan_t)getActiveTool()), FanKeyIcon);
@@ -311,25 +309,33 @@ void RTS::onIdle() {
     else
       rts.sendData(2, DisplayStandbyEnableIndicator);
 
-    rts.sendData(getAxisSteps_per_mm(X)  * 10, StepMM_X);
-    rts.sendData(getAxisSteps_per_mm(Y)  * 10, StepMM_Y);
-    rts.sendData(getAxisSteps_per_mm(Z)  * 10, StepMM_Z);
-    rts.sendData(getAxisSteps_per_mm(E0) * 10, StepMM_E);
+    rts.sendData(getAxisSteps_per_mm(X)  * 100, StepMM_X);
+    rts.sendData(getAxisSteps_per_mm(Y)  * 100, StepMM_Y);
+    rts.sendData(getAxisSteps_per_mm(Z)  * 100, StepMM_Z);
+    rts.sendData(getAxisSteps_per_mm(E0) * 100, StepMM_E);
 
     rts.sendData(getAxisMaxAcceleration_mm_s2(X) / 100, Accel_X);
     rts.sendData(getAxisMaxAcceleration_mm_s2(Y) / 100, Accel_Y);
     rts.sendData(getAxisMaxAcceleration_mm_s2(Z) /  10, Accel_Z);
     rts.sendData(getAxisMaxAcceleration_mm_s2(E0),      Accel_E);
 
+    #if ENABLED(LIN_ADVANCE)
+      rts.sendData(getLinearAdvance_mm_mm_s(E0) * 100, LinAdvKFact);
+    #endif
+
     rts.sendData(getAxisMaxFeedrate_mm_s(X),  Feed_X);
     rts.sendData(getAxisMaxFeedrate_mm_s(Y),  Feed_Y);
     rts.sendData(getAxisMaxFeedrate_mm_s(Z),  Feed_Z);
     rts.sendData(getAxisMaxFeedrate_mm_s(E0), Feed_E);
 
+    #if ENABLED(CLASSIC_JERK)
     rts.sendData(getAxisMaxJerk_mm_s(X) * 100, Jerk_X);
     rts.sendData(getAxisMaxJerk_mm_s(Y) * 100, Jerk_Y);
     rts.sendData(getAxisMaxJerk_mm_s(Z) * 100, Jerk_Z);
     rts.sendData(getAxisMaxJerk_mm_s(E0) * 100, Jerk_E);
+    #else
+      rts.sendData(getJunctionDeviation_mm() * 100, JuncDev);
+    #endif
 
     #if HAS_HOTEND_OFFSET
       rts.sendData(getNozzleOffset_mm(X, E1) * 10, T2Offset_X);
@@ -662,7 +668,15 @@ void RTS::handleData() {
     case T2Offset_X ... T2StepMM_E:
     case Accel_X ... Accel_E:
     case Feed_X ... Feed_E:
+#if ENABLED(LIN_ADVANCE)
+      case LinAdvKFact:
+#endif
+#if ENABLED(CLASSIC_JERK)
     case Jerk_X ... Jerk_E:
+#else
+      case JuncDev:
+#endif
+    case IdleShutdownToggle:
     case RunoutToggle:
     case PowerLossToggle:
     case FanKeyIcon:
@@ -935,18 +949,18 @@ void RTS::handleData() {
         else
           tmp_float_handling = float(recdat.data[0]) / 100;
         if (recdat.addr == StepMM_X) {
-          setAxisSteps_per_mm(tmp_float_handling * 10, X);
+          setAxisSteps_per_mm(tmp_float_handling * 100, X);
         }
         else if (recdat.addr == StepMM_Y) {
-          setAxisSteps_per_mm(tmp_float_handling * 10, Y);
+          setAxisSteps_per_mm(tmp_float_handling * 100, Y);
         }
         else if (recdat.addr == StepMM_Z) {
-          setAxisSteps_per_mm(tmp_float_handling * 10, Z);
+          setAxisSteps_per_mm(tmp_float_handling * 100, Z);
         }
         else if (recdat.addr == StepMM_E) {
-          setAxisSteps_per_mm(tmp_float_handling * 10, E0);
+          setAxisSteps_per_mm(tmp_float_handling * 100, E0);
           #if DISABLED(DUAL_X_CARRIAGE)
-            setAxisSteps_per_mm(tmp_float_handling * 10, E1);
+            setAxisSteps_per_mm(tmp_float_handling * 100, E1);
           #endif
         }
         #if ENABLED(DUAL_X_CARRIAGE)
@@ -989,8 +1003,20 @@ void RTS::handleData() {
             setAxisMaxJerk_mm_s(tmp_float_handling, E0);
             setAxisMaxJerk_mm_s(tmp_float_handling, E1);
           }
+        #else
+          else if (recdat.addr == JuncDev) {
+            setJunctionDeviation_mm(tmp_float_handling);
+          }
         #endif
-
+        #if ENABLED(LIN_ADVANCE)
+          else if(recdat.addr == LinAdvKFact) {
+            setLinearAdvance_mm_mm_s(tmp_float_handling, E0);
+          }
+        #endif
+        else if(recdat.addr == IdleShutdownToggle) {
+          InactivityShutdown = !InactivityShutdown;
+          injectCommands(InactivityShutdown ? F("M85S120") : F("M85S0"));
+        }
         #if HAS_FILAMENT_SENSOR
           else if (recdat.addr == RunoutToggle) {
             setFilamentRunoutEnabled(!getFilamentRunoutEnabled());
