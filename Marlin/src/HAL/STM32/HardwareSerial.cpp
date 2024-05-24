@@ -147,11 +147,11 @@
 #endif
 #ifdef USING_HW_SERIAL6
   #ifdef USART6
-    HAL_HardwareSerial HSerial5(USART6);
+    HAL_HardwareSerial HSerial6(USART6);
   #else
-    HAL_HardwareSerial HSerial5(UART6);
+    HAL_HardwareSerial HSerial6(UART6);
   #endif
-  void serialEvent5() __attribute__((weak));
+  void serialEvent6() __attribute__((weak));
 #endif
 
 // Constructors ////////////////////////////////////////////////////////////////
