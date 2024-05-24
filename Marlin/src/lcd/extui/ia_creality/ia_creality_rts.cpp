@@ -258,10 +258,10 @@ void RTS::onIdle() {
         onMediaMounted();
       else
         injectCommands_P(PSTR("M22\nM21"));
-        show_status = true;
-        tpShowStatus = false;
-        rts.sendData(ExchangePageBase + 45, ExchangepageAddr);
-        no_reentry = false;
+      show_status = true;
+      tpShowStatus = false;
+      rts.sendData(ExchangePageBase + 45, ExchangepageAddr);
+      no_reentry = false;
     }
     rts.sendData(startprogress, StartIcon);
   }
