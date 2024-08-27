@@ -1584,7 +1584,7 @@ void Planner::quick_stop() {
   // Restart the block delay for the first movement - As the queue was
   // forced to empty, there's no risk the ISR will touch this.
 
-  delay_before_delivering = TERN_(FT_MOTION, ftMotion.cfg.mode ? BLOCK_DELAY_NONE :) BLOCK_DELAY_FOR_1ST_MOVE;
+  delay_before_delivering = TERN_(FT_MOTION, ftMotion.cfg.active ? BLOCK_DELAY_NONE :) BLOCK_DELAY_FOR_1ST_MOVE;
 
   TERN_(HAS_WIRED_LCD, clear_block_buffer_runtime()); // Clear the accumulated runtime
 
@@ -1745,7 +1745,7 @@ bool Planner::_buffer_steps(const xyze_long_t &target
     // As there are no queued movements, the Stepper ISR will not touch this
     // variable, so there is no risk setting this here (but it MUST be done
     // before the following line!!)
-    delay_before_delivering = TERN_(FT_MOTION, ftMotion.cfg.mode ? BLOCK_DELAY_NONE :) BLOCK_DELAY_FOR_1ST_MOVE;
+    delay_before_delivering = TERN_(FT_MOTION, ftMotion.cfg.active ? BLOCK_DELAY_NONE :) BLOCK_DELAY_FOR_1ST_MOVE;
   }
 
   // Move buffer head
@@ -2804,7 +2804,7 @@ void Planner::buffer_sync_block(const BlockFlagBit sync_flag/*=BLOCK_BIT_SYNC_PO
     // As there are no queued movements, the Stepper ISR will not touch this
     // variable, so there is no risk setting this here (but it MUST be done
     // before the following line!!)
-    delay_before_delivering = TERN_(FT_MOTION, ftMotion.cfg.mode ? BLOCK_DELAY_NONE :) BLOCK_DELAY_FOR_1ST_MOVE;
+    delay_before_delivering = TERN_(FT_MOTION, ftMotion.cfg.active ? BLOCK_DELAY_NONE :) BLOCK_DELAY_FOR_1ST_MOVE;
   }
 
   block_buffer_head = next_buffer_head;
@@ -3097,7 +3097,7 @@ bool Planner::buffer_line(const xyze_pos_t &cart, const_feedRate_t fr_mm_s
       // As there are no queued movements, the Stepper ISR will not touch this
       // variable, so there is no risk setting this here (but it MUST be done
       // before the following line!!)
-      delay_before_delivering = TERN_(FT_MOTION, ftMotion.cfg.mode ? BLOCK_DELAY_NONE :) BLOCK_DELAY_FOR_1ST_MOVE;
+      delay_before_delivering = TERN_(FT_MOTION, ftMotion.cfg.active ? BLOCK_DELAY_NONE :) BLOCK_DELAY_FOR_1ST_MOVE;
     }
 
     // Move buffer head
@@ -3118,7 +3118,7 @@ bool Planner::buffer_line(const xyze_pos_t &cart, const_feedRate_t fr_mm_s
 void Planner::set_machine_position_mm(const abce_pos_t &abce) {
 
   // When FT Motion is enabled, call synchronize() here instead of generating a sync block
-  if (TERN0(FT_MOTION, ftMotion.cfg.mode)) synchronize();
+  if (TERN0(FT_MOTION, ftMotion.cfg.active)) synchronize();
 
   TERN_(DISTINCT_E_FACTORS, last_extruder = active_extruder);
   TERN_(HAS_POSITION_FLOAT, position_float = abce);
@@ -3153,6 +3153,14 @@ void Planner::set_machine_position_mm(const abce_pos_t &abce) {
   }
 }
 
+/**
+ * Set the machine positions in millimeters (soon) given the native position.
+ * Synchonized with the planner queue.
+ *
+ *   - Modifiers are applied for skew, leveling, retract, etc.
+ *   - Kinematics are applied to remap cartesian positions to stepper positions.
+ *   - The resulting stepper positions are synchronized at the end of the planner queue.
+ */
 void Planner::set_position_mm(const xyze_pos_t &xyze) {
   xyze_pos_t machine = xyze;
   TERN_(HAS_POSITION_MODIFIERS, apply_modifiers(machine, true));
@@ -3169,12 +3177,13 @@ void Planner::set_position_mm(const xyze_pos_t &xyze) {
 #if HAS_EXTRUDERS
 
   /**
-   * Setters for planner position (also setting stepper position).
+   * Special setter for planner E position (also setting E stepper position).
    */
   void Planner::set_e_position_mm(const_float_t e) {
     const uint8_t axis_index = E_AXIS_N(active_extruder);
     TERN_(DISTINCT_E_FACTORS, last_extruder = active_extruder);
 
+    // Unapply the current retraction before (immediately) setting the planner position
     const float e_new = DIFF_TERN(FWRETRACT, e, fwretract.current_retract[active_extruder]);
     position.e = LROUND(settings.axis_steps_per_mm[axis_index] * e_new);
     TERN_(HAS_POSITION_FLOAT, position_float.e = e_new);
@@ -3183,12 +3192,14 @@ void Planner::set_position_mm(const xyze_pos_t &xyze) {
     if (has_blocks_queued())
       buffer_sync_block(BLOCK_BIT_SYNC_POSITION);
     else
-      stepper.set_axis_position(E_AXIS, position.e);
+      stepper.set_e_position(position.e);
   }
 
-#endif
+#endif // HAS_EXTRUDERS
 
-// Recalculate the steps/s^2 acceleration rates, based on the mm/s^2
+/**
+ * Recalculate steps/s^2 acceleration rates based on mm/s^2 acceleration rates
+ */
 void Planner::refresh_acceleration_rates() {
   uint32_t highest_rate = 1;
   LOOP_DISTINCT_AXES(i) {

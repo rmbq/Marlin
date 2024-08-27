@@ -59,7 +59,7 @@
   #define E_STATES EXTRUDERS  // All steppers are set together for each mixer. (Currently limited to 1.)
 #elif HAS_SWITCHING_EXTRUDER
   #define E_STATES E_STEPPERS // One stepper for every two EXTRUDERS. The last extruder can be non-switching.
-#elif HAS_PRUSA_MMU2
+#elif HAS_PRUSA_MMU2 || HAS_PRUSA_MMU3
   #define E_STATES E_STEPPERS // One E stepper shared with all EXTRUDERS, so setting any only sets one.
 #else
   #define E_STATES E_STEPPERS // One stepper for each extruder, so each can be disabled individually.
@@ -299,7 +299,7 @@ class Stepper {
     // and avoid the most unreasonably slow step rates.
     static constexpr uint32_t minimal_step_rate = (
       #ifdef CPU_32_BIT
-        _MAX((STEPPER_TIMER_RATE) / HAL_TIMER_TYPE_MAX, 1U) // 32-bit shouldn't go below 1
+        _MAX((uint32_t(STEPPER_TIMER_RATE) / HAL_TIMER_TYPE_MAX), 1U) // 32-bit shouldn't go below 1
       #else
         (F_CPU) / 500000U   // AVR shouldn't go below 32 (16MHz) or 40 (20MHz)
       #endif
@@ -540,6 +540,11 @@ class Stepper {
     static void set_position(const xyze_long_t &spos);
     static void set_axis_position(const AxisEnum a, const int32_t &v);
 
+    #if HAS_EXTRUDERS
+      // Save a little when E is the only one used
+      static void set_e_position(const int32_t &v);
+    #endif
+
     // Report the positions of the steppers, in steps
     static void report_a_position(const xyz_long_t &pos);
     static void report_positions();
@@ -668,8 +673,6 @@ class Stepper {
     }
 
     #if ENABLED(FT_MOTION)
-      // Manage the planner
-      static void ftMotion_blockQueueUpdate();
       // Set current position in steps when reset flag is set in M493 and planner already synchronized
       static void ftMotion_syncPosition();
     #endif
