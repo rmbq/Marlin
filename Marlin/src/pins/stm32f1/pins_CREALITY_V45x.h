@@ -68,7 +68,7 @@
   #ifndef PROBE_TARE_PIN
     #define PROBE_TARE_PIN                    PA5
   #endif
-#else 
+#elif !ENABLED(BD_SENSOR) 
   #define SERVO0_PIN                          PA5
 #endif
 
