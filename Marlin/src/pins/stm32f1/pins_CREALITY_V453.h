@@ -62,4 +62,11 @@
   #define Z_SERIAL_RX_PIN PA15
 #endif
 
+#if ENABLED(BD_SENSOR)
+  #define Z_MIN_PROBE_PIN PA4
+  #define I2C_BD_SDA_PIN  PA4
+  #define I2C_BD_SCL_PIN  PA5
+  #define I2C_BD_DELAY    10 // (seconds)
+#endif
+
 #include "pins_CREALITY_V45x.h"
