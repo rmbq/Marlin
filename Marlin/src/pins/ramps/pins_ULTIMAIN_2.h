@@ -90,6 +90,16 @@
 #define DEFAULT_PWM_MOTOR_CURRENT  {1300, 1300, 1250}
 
 //
+// Filament Runout Sensor
+//
+#ifndef FIL_RUNOUT_PIN
+  #define FIL_RUNOUT_PIN                      54  // ADC0
+#endif
+#ifndef FIL_RUNOUT2_PIN
+  #define FIL_RUNOUT2_PIN                     55  // ADC1
+#endif
+
+//
 // Temperature Sensors
 //
 #define TEMP_0_PIN                             8  // Analog Input
@@ -114,7 +124,7 @@
 //
 // Misc. Functions
 //
-#define SDSS                                  53
+#define SD_SS_PIN                             53
 #define SD_DETECT_PIN                         39
 #define LED_PIN                                8
 //#define SAFETY_TRIGGERED_PIN                28  // PIN to detect the safety circuit has triggered
